@@ -1,7 +1,7 @@
 // release.config.js
 module.exports = {
   branches: ['main'],
-  repositoryUrl: "https://github.com/Ma11hewThomas/wdio-ctrf-json-reporter.git",
+  repositoryUrl: 'https://github.com/Ma11hewThomas/wdio-ctrf-json-reporter.git',
   plugins: [
     '@semantic-release/commit-analyzer',
     '@semantic-release/release-notes-generator',
