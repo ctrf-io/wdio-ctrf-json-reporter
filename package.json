@@ -15,7 +15,7 @@
     "dist/",
     "README.md"
   ],
-  "author": "",
+  "author": "Matthew Thomas",
   "license": "ISC",
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",
