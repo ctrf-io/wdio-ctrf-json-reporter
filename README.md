@@ -1,6 +1,6 @@
 # Webdriverio JSON Reporter - CTRF
 
-A WDIO test reporter to generate JSON test reports that are [CTRF](https://ctrf.io) compliant.
+A WDIO test reporter to generate JSON test reports that are CTRF compliant.
 
 [Common Test Report Format](https://ctrf.io) helps you generate consistent JSON reports that are agnostic of specific programming languages or test frameworks.
 
@@ -22,8 +22,8 @@ npm install --save-dev wdio-ctrf-json-reporter
 Add the reporter to your wdio.config.ts/js file:
 
 ```javascript
-   reporters: [
-        ['ctrf-json', {}]],
+reporters: [
+  ['ctrf-json', {}]],
 ```
 
 Run your tests:
