@@ -97,7 +97,6 @@ class GenerateCtrfReport extends WDIOReporter {
   onRunnerEnd(): void {
     this.ctrfReport.results.summary.stop = Date.now()
     this.writeReportToFile(this.ctrfReport)
-    console.log(JSON.stringify(this.reporterConfigOptions))
   }
 
   private setFilename(filename: string): void {
