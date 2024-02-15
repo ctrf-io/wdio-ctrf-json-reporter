@@ -70,7 +70,7 @@ Run your tests:
 npm run wdio
 ```
 
-You'll find a JSON file named `ctrf-report.json` in the `ctrf` directory.
+In the `ctrf` directory, you will find the JSON report files generated for each spec.
 
 ## Reporter Options
 

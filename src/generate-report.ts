@@ -1,4 +1,4 @@
-import WDIOReporter, { type TestStats } from '@wdio/reporter'
+import WDIOReporter, { RunnerStats, type TestStats } from '@wdio/reporter'
 import {
   type CtrfEnvironment,
   type CtrfReport,
@@ -94,8 +94,17 @@ class GenerateCtrfReport extends WDIOReporter {
     this.updateCtrfTotalsFromTestStats(testStats)
   }
 
-  onRunnerEnd(): void {
+  onRunnerEnd(runner: RunnerStats): void {
     this.ctrfReport.results.summary.stop = Date.now()
+    const specFilePath = runner.specs[0]
+    const pathParts = specFilePath.split(path.sep)
+    const uniqueIdentifier = pathParts
+      .slice(-2)
+      .join('-')
+      .replace(/\.(js|ts)$/, '')
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+    this.reporterConfigOptions.outputFile = `ctrf-report-${uniqueIdentifier}-${timestamp}.json`
     this.writeReportToFile(this.ctrfReport)
   }
 
@@ -176,11 +185,7 @@ class GenerateCtrfReport extends WDIOReporter {
     const str = JSON.stringify(data, null, 2)
     try {
       fs.writeFileSync(filePath, str + '\n')
-      console.log(
-        `${this.reporterName}: successfully written ctrf json to %s/%s`,
-        this.reporterConfigOptions.outputDir,
-        this.reporterConfigOptions.outputFile
-      )
+      console.log(`${this.reporterName}: successfully written ctrf json`)
     } catch (error) {
       console.error(`Error writing ctrf json report:, ${String(error)}`)
     }
