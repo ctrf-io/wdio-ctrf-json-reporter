@@ -1,4 +1,4 @@
-# Webdriverio JSON Reporter
+# Webdriverio JSON Test Results Report
 
 A WDIO JSON test reporter to create test reports that follow the CTRF standard.
 
