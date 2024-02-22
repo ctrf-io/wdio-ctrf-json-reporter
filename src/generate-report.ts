@@ -1,4 +1,4 @@
-import WDIOReporter, { RunnerStats, type TestStats } from '@wdio/reporter'
+import WDIOReporter, { type RunnerStats, type TestStats } from '@wdio/reporter'
 import {
   type CtrfEnvironment,
   type CtrfReport,
