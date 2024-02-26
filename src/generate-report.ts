@@ -1,5 +1,10 @@
-import WDIOReporter, { type RunnerStats, type TestStats } from '@wdio/reporter'
+import WDIOReporter, {
+  type SuiteStats,
+  type RunnerStats,
+  type TestStats,
+} from '@wdio/reporter'
 import {
+  type CtrfTest,
   type CtrfEnvironment,
   type CtrfReport,
   type CtrfTestState,
@@ -30,6 +35,9 @@ class GenerateCtrfReport extends WDIOReporter {
   private readonly reporterName = 'wdio-ctrf-json-reporter'
   private readonly defaultOutputFile = 'ctrf-report.json'
   private readonly defaultOutputDir = 'ctrf'
+  private currentSuite = ''
+  private currentSpecFile = ''
+  private currentBrowser = ''
 
   constructor(reporterOptions: ReporterConfigOptions) {
     super(reporterOptions)
@@ -37,7 +45,9 @@ class GenerateCtrfReport extends WDIOReporter {
     this.reporterConfigOptions = {
       outputFile: reporterOptions?.outputFile ?? this.defaultOutputFile,
       outputDir: reporterOptions?.outputDir ?? this.defaultOutputDir,
+      minimal: reporterOptions?.minimal ?? false,
       appName: reporterOptions?.appName ?? undefined,
+      testType: reporterOptions?.testType ?? 'e2e',
       appVersion: reporterOptions?.appVersion ?? undefined,
       osPlatform: reporterOptions?.osPlatform ?? undefined,
       osRelease: reporterOptions?.osRelease ?? undefined,
@@ -81,8 +91,20 @@ class GenerateCtrfReport extends WDIOReporter {
     }
   }
 
-  onRunnerStart(): void {
+  onSuiteStart(suite: SuiteStats): void {
+    fs.writeFileSync('suitestats.json', JSON.stringify(suite))
+    this.currentSuite = suite.fullTitle
+    this.currentSpecFile = suite.file
+  }
+
+  onRunnerStart(runner: RunnerStats): void {
     this.ctrfReport.results.summary.start = Date.now()
+    const caps: WebdriverIO.Capabilities = runner.capabilities as any
+
+    const browserName = caps.browserName ?? ''
+    const browserVersion = caps.browserVersion ?? ''
+    this.currentBrowser = `${browserName} ${browserVersion}`
+
     this.setEnvironmentDetails(this.reporterConfigOptions ?? {})
     if (this.hasEnvironmentDetails(this.ctrfEnvironment)) {
       this.ctrfReport.results.environment = this.ctrfEnvironment
@@ -95,6 +117,8 @@ class GenerateCtrfReport extends WDIOReporter {
   }
 
   onRunnerEnd(runner: RunnerStats): void {
+    fs.writeFileSync('runner-stats.json', JSON.stringify(runner))
+
     this.ctrfReport.results.summary.stop = Date.now()
     const specFilePath = runner.specs[0]
     const pathParts = specFilePath.split(path.sep)
@@ -142,11 +166,29 @@ class GenerateCtrfReport extends WDIOReporter {
     test: TestStats,
     status: CtrfTestState
   ): void {
-    this.ctrfReport.results.tests.push({
+    fs.writeFileSync('teststats.json', JSON.stringify(test))
+    const ctrfTest: CtrfTest = {
       name: test.title,
       status,
       duration: test._duration,
-    })
+    }
+
+    if (this.reporterConfigOptions.minimal === false) {
+      ctrfTest.start = Math.floor(test.start.getTime() / 1000)
+      ctrfTest.stop =
+        test.end !== undefined ? Math.floor(test.end.getTime() / 1000) : 0
+      ctrfTest.message = this.extractFailureDetails(test).message
+      ctrfTest.trace = this.extractFailureDetails(test).trace
+      ctrfTest.rawStatus = test.state
+      ctrfTest.type = this.reporterConfigOptions.testType ?? 'e2e'
+      ctrfTest.retry = test.retries
+      ctrfTest.flake = test.state === 'passed' && (test.retries ?? 0) > 0
+      ctrfTest.suite = this.currentSuite
+      ctrfTest.filePath = this.currentSpecFile
+      ctrfTest.browser = this.currentBrowser
+    }
+
+    this.ctrfReport.results.tests.push(ctrfTest)
   }
 
   setEnvironmentDetails(reporterConfigOptions: ReporterConfigOptions): void {
@@ -175,6 +217,20 @@ class GenerateCtrfReport extends WDIOReporter {
 
   hasEnvironmentDetails(environment: CtrfEnvironment): boolean {
     return Object.keys(environment).length > 0
+  }
+
+  extractFailureDetails(testResult: TestStats): Partial<CtrfTest> {
+    if (testResult.state === 'failed' && testResult.error !== undefined) {
+      const failureDetails: Partial<CtrfTest> = {}
+      if (testResult.error.message !== undefined) {
+        failureDetails.message = testResult.error.message
+      }
+      if (testResult.error.stack !== undefined) {
+        failureDetails.trace = testResult.error.stack
+      }
+      return failureDetails
+    }
+    return {}
   }
 
   private writeReportToFile(data: CtrfReport): void {
