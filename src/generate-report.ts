@@ -92,7 +92,6 @@ class GenerateCtrfReport extends WDIOReporter {
   }
 
   onSuiteStart(suite: SuiteStats): void {
-    fs.writeFileSync('suitestats.json', JSON.stringify(suite))
     this.currentSuite = suite.fullTitle
     this.currentSpecFile = suite.file
   }
@@ -117,8 +116,6 @@ class GenerateCtrfReport extends WDIOReporter {
   }
 
   onRunnerEnd(runner: RunnerStats): void {
-    fs.writeFileSync('runner-stats.json', JSON.stringify(runner))
-
     this.ctrfReport.results.summary.stop = Date.now()
     const specFilePath = runner.specs[0]
     const pathParts = specFilePath.split(path.sep)
@@ -166,7 +163,6 @@ class GenerateCtrfReport extends WDIOReporter {
     test: TestStats,
     status: CtrfTestState
   ): void {
-    fs.writeFileSync('teststats.json', JSON.stringify(test))
     const ctrfTest: CtrfTest = {
       name: test.title,
       status,
@@ -181,8 +177,8 @@ class GenerateCtrfReport extends WDIOReporter {
       ctrfTest.trace = this.extractFailureDetails(test).trace
       ctrfTest.rawStatus = test.state
       ctrfTest.type = this.reporterConfigOptions.testType ?? 'e2e'
-      ctrfTest.retry = test.retries
-      ctrfTest.flake = test.state === 'passed' && (test.retries ?? 0) > 0
+      ctrfTest.retries = test.retries
+      ctrfTest.flaky = test.state === 'passed' && (test.retries ?? 0) > 0
       ctrfTest.suite = this.currentSuite
       ctrfTest.filePath = this.currentSpecFile
       ctrfTest.browser = this.currentBrowser
