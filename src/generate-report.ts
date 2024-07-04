@@ -116,15 +116,19 @@ class GenerateCtrfReport extends WDIOReporter {
   }
 
   onRunnerEnd(runner: RunnerStats): void {
-    this.ctrfReport.results.summary.stop = Date.now()       
+    this.ctrfReport.results.summary.stop = Date.now()
     const specFilePath = runner.specs[0]
     const pathParts = path.normalize(specFilePath).split(path.sep)
     const uniqueIdentifier = pathParts
-    .slice(-2)
-    .join('-')
-    .replace(/\.(js|ts)$/, '')
-    
-    const sanitizedUniqueIdentifier = uniqueIdentifier.replace(/[<>:"/\\|?*\x00-\x1F]/g, '');
+      .slice(-2)
+      .join('-')
+      .replace(/\.(js|ts)$/, '')
+
+    const sanitizedUniqueIdentifier = uniqueIdentifier.replace(
+      // eslint-disable-next-line no-control-regex
+      /[<>:"/\\|?*\x00-\x1F]/g,
+      ''
+    )
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
     this.reporterConfigOptions.outputFile = `ctrf-report-${sanitizedUniqueIdentifier}-${timestamp}.json`
     this.writeReportToFile(this.ctrfReport)
