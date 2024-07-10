@@ -101,8 +101,8 @@ In the `ctrf` directory, you will find the JSON report files generated for each 
 The reporter supports several configuration options:
 
 ```javascript
-reporter: [
-    ['wdio-ctrf-json-reporter', {
+reporters: [
+    ['ctrf-json', {
         outputDir: 'custom-directory',  // Optional: Output directory path. Defaults to 'ctrf'.
         minimal: true,                  // Optional: Generate a minimal report. Defaults to 'false'. Overrides screenshot and testType when set to true
         testType: 'e2e',                // Optional: Specify the test type (e.g., 'api', 'e2e'). Defaults to 'e2e'.
