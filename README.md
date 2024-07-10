@@ -103,9 +103,8 @@ The reporter supports several configuration options:
 ```javascript
 reporter: [
     ['wdio-ctrf-json-reporter', {
-        outputFile: 'custom-name.json', // Optional: Output file name. Defaults to 'ctrf-report.json'.
         outputDir: 'custom-directory',  // Optional: Output directory path. Defaults to 'ctrf'.
-         minimal: true,                  // Optional: Generate a minimal report. Defaults to 'false'. Overrides screenshot and testType when set to true
+        minimal: true,                  // Optional: Generate a minimal report. Defaults to 'false'. Overrides screenshot and testType when set to true
         testType: 'e2e',                // Optional: Specify the test type (e.g., 'api', 'e2e'). Defaults to 'e2e'.
         appName: 'MyApp',               // Optional: Specify the name of the application under test.
         appVersion: '1.0.0',            // Optional: Specify the version of the application under test.
