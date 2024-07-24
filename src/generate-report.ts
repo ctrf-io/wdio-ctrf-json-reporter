@@ -25,6 +25,7 @@ interface ReporterConfigOptions {
   osVersion?: string | undefined
   buildName?: string | undefined
   buildNumber?: string | undefined
+  buildUrl?: string | undefined
 }
 
 class GenerateCtrfReport extends WDIOReporter {
@@ -54,6 +55,7 @@ class GenerateCtrfReport extends WDIOReporter {
       osVersion: reporterOptions?.osVersion ?? undefined,
       buildName: reporterOptions?.buildName ?? undefined,
       buildNumber: reporterOptions?.buildNumber ?? undefined,
+      buildUrl: reporterOptions?.buildUrl ?? undefined,
     }
     this.ctrfReport = {
       results: {
@@ -213,6 +215,9 @@ class GenerateCtrfReport extends WDIOReporter {
     }
     if (reporterConfigOptions.buildNumber !== undefined) {
       this.ctrfEnvironment.buildNumber = reporterConfigOptions.buildNumber
+    }
+    if (reporterConfigOptions.buildUrl !== undefined) {
+      this.ctrfEnvironment.buildUrl = reporterConfigOptions.buildUrl
     }
   }
 
