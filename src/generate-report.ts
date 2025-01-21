@@ -131,8 +131,7 @@ class GenerateCtrfReport extends WDIOReporter {
       /[<>:"/\\|?*\x00-\x1F]/g,
       ''
     )
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-    this.reporterConfigOptions.outputFile = `ctrf-report-${sanitizedUniqueIdentifier}-${timestamp}.json`
+    this.reporterConfigOptions.outputFile = `ctrf-report-${sanitizedUniqueIdentifier}.json`
     this.writeReportToFile(this.ctrfReport)
   }
 
