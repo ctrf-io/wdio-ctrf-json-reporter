@@ -110,8 +110,15 @@ class GenerateCtrfReport extends WDIOReporter {
         this.previousReport = JSON.parse(
           fs.readFileSync(reportFile, 'utf8')
         ) as CtrfReport
+        if (this.reporterConfigOptions.debug === true) {
+          console.debug(`${this.reporterName}: read previous report`)
+        }
       } catch (e) {
-        console.error(`Error reading previous report: ${String(e)}`)
+        if (this.reporterConfigOptions.debug === true) {
+          console.debug(
+            `${this.reporterName}: Error reading previous report ${String(e)}`
+          )
+        }
       }
     }
   }
@@ -285,8 +292,10 @@ class GenerateCtrfReport extends WDIOReporter {
       if (this.reporterConfigOptions.debug === true) {
         console.debug(`${this.reporterName}: successfully written ${filePath}`)
       }
-    } catch (error) {
-      console.error(`Error writing ctrf json report: ${String(error)}`)
+    } catch (e) {
+      if (this.reporterConfigOptions.debug === true) {
+        console.debug(`${this.reporterName}: error writing report ${String(e)}`)
+      }
     }
   }
 }
