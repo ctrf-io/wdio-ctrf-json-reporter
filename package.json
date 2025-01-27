@@ -10,7 +10,8 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "test": "jest",
+    "test": "vitest",
+    "test:ci": "vitest --watch=false",
     "lint": "eslint . --ext .ts --fix",
     "lint-check": "eslint . --ext .ts",
     "format": "prettier --write .",
@@ -35,6 +36,7 @@
     "eslint-plugin-prettier": "^5.0.1",
     "eslint-plugin-promise": "^6.1.1",
     "prettier": "^3.1.1",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "vitest": "^3.0.4"
   }
 }

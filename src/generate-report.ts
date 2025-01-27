@@ -31,7 +31,7 @@ interface ReporterConfigOptions {
 }
 
 class GenerateCtrfReport extends WDIOReporter {
-  private readonly ctrfReport: CtrfReport
+  readonly ctrfReport: CtrfReport
   readonly ctrfEnvironment: CtrfEnvironment
   private readonly reporterConfigOptions: ReporterConfigOptions
 
@@ -226,9 +226,9 @@ class GenerateCtrfReport extends WDIOReporter {
       ctrfTest.retries =
         previousTest?.status === 'failed'
           ? (previousTest.retries ?? 0) + 1
-          : test.retries ?? 0
+          : previousTest?.retries ?? test.retries ?? 0
       ctrfTest.flaky =
-        previousTest?.status === 'failed'
+        previousTest?.status === 'failed' || previousTest?.flaky === true
           ? true
           : test.state === 'passed' && (ctrfTest.retries ?? 0) > 0
       ctrfTest.suite = this.currentSuite
