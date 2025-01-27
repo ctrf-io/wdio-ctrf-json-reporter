@@ -146,7 +146,10 @@ class GenerateCtrfReport extends WDIOReporter {
 
   private getReportFileName(specFilePath: string): string {
     // Find relative path of spec file
-    const specRelativePath = specFilePath.split(process.cwd())[1]
+    let specRelativePath = specFilePath
+    if (specFilePath.startsWith(process.cwd())) {
+      specRelativePath = specFilePath.split(process.cwd())[1]
+    }
     // Replace path separator with hyphen and remove file extension
     const uniqueIdentifier = specRelativePath
       .split(path.sep)
