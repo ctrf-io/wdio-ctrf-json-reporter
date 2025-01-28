@@ -1,6 +1,21 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`GenerateCtrfReport > passed spec > passed suite 1`] = `
+exports[`GenerateCtrfReport > reporter params > minimal 1`] = `
+[
+  {
+    "duration": undefined,
+    "name": "some test",
+    "status": "passed",
+  },
+  {
+    "duration": undefined,
+    "name": "a failed test",
+    "status": "failed",
+  },
+]
+`;
+
+exports[`GenerateCtrfReport > test output > passed spec > passed suite 1`] = `
 {
   "summary": {
     "failed": 0,
@@ -52,7 +67,7 @@ exports[`GenerateCtrfReport > passed spec > passed suite 1`] = `
 }
 `;
 
-exports[`GenerateCtrfReport > passed spec > passed suite with retry 1`] = `
+exports[`GenerateCtrfReport > test output > passed spec > passed suite with retry 1`] = `
 {
   "summary": {
     "failed": 0,
@@ -88,7 +103,7 @@ exports[`GenerateCtrfReport > passed spec > passed suite with retry 1`] = `
 }
 `;
 
-exports[`GenerateCtrfReport > retry spec > first run - 1 passed, 2 failures, 0 flaky 1`] = `
+exports[`GenerateCtrfReport > test output > retry spec > first run - 1 passed, 2 failures, 0 flaky 1`] = `
 {
   "summary": {
     "failed": 2,
@@ -156,7 +171,7 @@ exports[`GenerateCtrfReport > retry spec > first run - 1 passed, 2 failures, 0 f
 }
 `;
 
-exports[`GenerateCtrfReport > retry spec > second run - 2 passed, 1 failure, 1 flaky 1`] = `
+exports[`GenerateCtrfReport > test output > retry spec > second run - 2 passed, 1 failure, 1 flaky 1`] = `
 {
   "summary": {
     "failed": 1,
@@ -224,7 +239,7 @@ exports[`GenerateCtrfReport > retry spec > second run - 2 passed, 1 failure, 1 f
 }
 `;
 
-exports[`GenerateCtrfReport > retry spec > third run - 3 passes, 0 failures, 2 flaky 1`] = `
+exports[`GenerateCtrfReport > test output > retry spec > third run - 3 passes, 0 failures, 2 flaky 1`] = `
 {
   "summary": {
     "failed": 0,
@@ -292,7 +307,7 @@ exports[`GenerateCtrfReport > retry spec > third run - 3 passes, 0 failures, 2 f
 }
 `;
 
-exports[`GenerateCtrfReport > skipped test > suite with skippedTest 1`] = `
+exports[`GenerateCtrfReport > test output > skipped test > suite with skippedTest 1`] = `
 {
   "summary": {
     "failed": 0,

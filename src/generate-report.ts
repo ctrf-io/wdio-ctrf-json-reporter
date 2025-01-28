@@ -14,20 +14,19 @@ import fs = require('fs')
 import path = require('path')
 
 interface ReporterConfigOptions {
-  outputFile?: string
-  outputDir?: string
-  minimal?: boolean
-  screenshot?: boolean
+  outputDir: string
+  minimal: boolean
+  screenshot: boolean
   testType?: string
-  appName?: string | undefined
-  appVersion?: string | undefined
-  osPlatform?: string | undefined
-  osRelease?: string | undefined
-  osVersion?: string | undefined
-  buildName?: string | undefined
-  buildNumber?: string | undefined
-  buildUrl?: string | undefined
-  debug?: boolean
+  appName?: string
+  appVersion?: string
+  osPlatform?: string
+  osRelease?: string
+  osVersion?: string
+  buildName?: string
+  buildNumber?: string
+  buildUrl?: string
+  debug: boolean
 }
 
 class GenerateCtrfReport extends WDIOReporter {
@@ -36,30 +35,28 @@ class GenerateCtrfReport extends WDIOReporter {
   private readonly reporterConfigOptions: ReporterConfigOptions
 
   private readonly reporterName = 'wdio-ctrf-json-reporter'
-  private readonly defaultOutputFile = 'ctrf-report.json'
-  private readonly defaultOutputDir = 'ctrf'
   private currentSuite = ''
   private currentSpecFile = ''
   private currentBrowser = ''
 
-  constructor(reporterOptions: ReporterConfigOptions) {
+  constructor(reporterOptions: Partial<ReporterConfigOptions>) {
     super(reporterOptions)
-
     this.reporterConfigOptions = {
-      outputFile: reporterOptions?.outputFile ?? this.defaultOutputFile,
-      outputDir: reporterOptions?.outputDir ?? this.defaultOutputDir,
-      minimal: reporterOptions?.minimal ?? false,
-      appName: reporterOptions?.appName ?? undefined,
-      testType: reporterOptions?.testType ?? 'e2e',
-      appVersion: reporterOptions?.appVersion ?? undefined,
-      osPlatform: reporterOptions?.osPlatform ?? undefined,
-      osRelease: reporterOptions?.osRelease ?? undefined,
-      osVersion: reporterOptions?.osVersion ?? undefined,
-      buildName: reporterOptions?.buildName ?? undefined,
-      buildNumber: reporterOptions?.buildNumber ?? undefined,
-      buildUrl: reporterOptions?.buildUrl ?? undefined,
-      debug: reporterOptions?.debug ?? false,
+      outputDir: reporterOptions.outputDir ?? 'ctrf',
+      minimal: reporterOptions.minimal ?? false,
+      screenshot: reporterOptions.screenshot ?? false,
+      appName: reporterOptions.appName,
+      testType: reporterOptions.testType ?? 'e2e',
+      appVersion: reporterOptions.appVersion,
+      osPlatform: reporterOptions.osPlatform,
+      osRelease: reporterOptions.osRelease,
+      osVersion: reporterOptions.osVersion,
+      buildName: reporterOptions.buildName,
+      buildNumber: reporterOptions.buildNumber,
+      buildUrl: reporterOptions.buildUrl,
+      debug: reporterOptions.debug ?? false,
     }
+
     this.ctrfReport = {
       results: {
         tool: {
@@ -81,18 +78,8 @@ class GenerateCtrfReport extends WDIOReporter {
 
     this.ctrfEnvironment = {}
 
-    if (this.reporterConfigOptions?.outputFile !== undefined)
-      this.setFilename(this.reporterConfigOptions.outputFile)
-
-    if (
-      !fs.existsSync(
-        this.reporterConfigOptions.outputDir ?? this.defaultOutputDir
-      )
-    ) {
-      fs.mkdirSync(
-        this.reporterConfigOptions.outputDir ?? this.defaultOutputDir,
-        { recursive: true }
-      )
+    if (!fs.existsSync(this.reporterConfigOptions.outputDir)) {
+      fs.mkdirSync(this.reporterConfigOptions.outputDir, { recursive: true })
     }
   }
 
@@ -102,7 +89,7 @@ class GenerateCtrfReport extends WDIOReporter {
     this.currentSuite = suite.fullTitle
     this.currentSpecFile = suite.file
     const reportFile = path.join(
-      this.reporterConfigOptions.outputDir ?? this.defaultOutputDir,
+      this.reporterConfigOptions.outputDir,
       this.getReportFileName(this.currentSpecFile)
     )
     if (fs.existsSync(reportFile)) {
@@ -110,11 +97,11 @@ class GenerateCtrfReport extends WDIOReporter {
         this.previousReport = JSON.parse(
           fs.readFileSync(reportFile, 'utf8')
         ) as CtrfReport
-        if (this.reporterConfigOptions.debug === true) {
+        if (this.reporterConfigOptions.debug ?? false) {
           console.debug(`${this.reporterName}: read previous report`)
         }
       } catch (e) {
-        if (this.reporterConfigOptions.debug === true) {
+        if (this.reporterConfigOptions.debug) {
           console.debug(
             `${this.reporterName}: Error reading previous report ${String(e)}`
           )
@@ -132,7 +119,7 @@ class GenerateCtrfReport extends WDIOReporter {
     if (caps.browserVersion !== undefined) {
       this.currentBrowser += ` ${caps.browserVersion}`
     }
-    this.setEnvironmentDetails(this.reporterConfigOptions ?? {})
+    this.setEnvironmentDetails(this.reporterConfigOptions)
     this.ctrfEnvironment.extra = caps
     if (this.hasEnvironmentDetails(this.ctrfEnvironment)) {
       this.ctrfReport.results.environment = this.ctrfEnvironment
@@ -166,18 +153,8 @@ class GenerateCtrfReport extends WDIOReporter {
   }
 
   onRunnerEnd(runner: RunnerStats): void {
-    this.reporterConfigOptions.outputFile = this.getReportFileName(
-      runner.specs[0]
-    )
-    this.writeReportToFile(this.ctrfReport)
-  }
-
-  private setFilename(filename: string): void {
-    if (filename.endsWith('.json')) {
-      this.reporterConfigOptions.outputFile = filename
-    } else {
-      this.reporterConfigOptions.outputFile = `${filename}.json`
-    }
+    const fileName = this.getReportFileName(runner.specs[0])
+    this.writeReportToFile(this.ctrfReport, fileName)
   }
 
   private updateCtrfTotalsFromTestStats(testStats: TestStats): void {
@@ -212,7 +189,7 @@ class GenerateCtrfReport extends WDIOReporter {
       duration: test._duration,
     }
 
-    if (this.reporterConfigOptions.minimal === false) {
+    if (!this.reporterConfigOptions.minimal) {
       const previousTest = this.previousReport?.results.tests.find(
         (name) => name.name === test.title
       )
@@ -240,9 +217,8 @@ class GenerateCtrfReport extends WDIOReporter {
   }
 
   setEnvironmentDetails(reporterConfigOptions: ReporterConfigOptions): void {
-    if (reporterConfigOptions.appName !== undefined) {
-      this.ctrfEnvironment.appName = reporterConfigOptions.appName
-    }
+    this.ctrfEnvironment.appName = reporterConfigOptions.appName
+
     if (reporterConfigOptions.appVersion !== undefined) {
       this.ctrfEnvironment.appVersion = reporterConfigOptions.appVersion
     }
@@ -284,19 +260,20 @@ class GenerateCtrfReport extends WDIOReporter {
     return {}
   }
 
-  private writeReportToFile(data: CtrfReport): void {
-    const filePath = path.join(
-      this.reporterConfigOptions.outputDir ?? this.defaultOutputDir,
-      this.reporterConfigOptions.outputFile ?? this.defaultOutputFile
-    )
+  private getReportPath(fileName: string): string {
+    return path.join(this.reporterConfigOptions.outputDir, fileName)
+  }
+
+  private writeReportToFile(data: CtrfReport, fileName: string): void {
+    const filePath = this.getReportPath(fileName)
     const str = JSON.stringify(data, null, 2)
     try {
       fs.writeFileSync(filePath, str + '\n')
-      if (this.reporterConfigOptions.debug === true) {
+      if (this.reporterConfigOptions.debug) {
         console.debug(`${this.reporterName}: successfully written ${filePath}`)
       }
     } catch (e) {
-      if (this.reporterConfigOptions.debug === true) {
+      if (this.reporterConfigOptions.debug) {
         console.debug(`${this.reporterName}: error writing report ${String(e)}`)
       }
     }
