@@ -41,7 +41,12 @@ class GenerateCtrfReport extends WDIOReporter {
   private currentBrowser = ''
 
   constructor(options: ReporterConfigOptions = {}) {
-    super({ ...options, outputDir: options.outputDir ?? 'ctrf' })
+    super(
+      Object.assign(
+        { stdout: true },
+        { ...options, outputDir: options.outputDir ?? 'ctrf' }
+      )
+    )
     if (options.outputDir) {
       this.outputDir = options.outputDir
     }
@@ -65,10 +70,6 @@ class GenerateCtrfReport extends WDIOReporter {
       },
     }
     this.ctrfEnvironment = {}
-
-    if (!fs.existsSync(this.outputDir)) {
-      fs.mkdirSync(this.outputDir, { recursive: true })
-    }
   }
 
   private previousReport?: CtrfReport
@@ -99,6 +100,10 @@ class GenerateCtrfReport extends WDIOReporter {
   }
 
   onRunnerStart(runner: RunnerStats): void {
+    if (!fs.existsSync(this.outputDir)) {
+      fs.mkdirSync(this.outputDir, { recursive: true })
+    }
+
     this.ctrfReport.results.summary.start = Date.now()
     const caps: WebdriverIO.Capabilities = runner.capabilities as any
     if (caps.browserName !== undefined) {
