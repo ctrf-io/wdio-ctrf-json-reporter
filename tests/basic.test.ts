@@ -1,11 +1,11 @@
 import { beforeAll, beforeEach, describe, expect, test } from 'vitest'
 import { getRunnerForSuite, SUITES } from './testdata'
-import GenerateCtrfReport from '../src'
 import * as fs from 'fs'
-
-let tmpReporter: GenerateCtrfReport
+import GenerateCtrfReport from '../src'
 
 describe('GenerateCtrfReport', () => {
+  let tmpReporter: GenerateCtrfReport
+
   beforeAll(() => {
     fs.rmSync('ctrf', { recursive: true, force: true })
   })
@@ -165,6 +165,7 @@ describe('GenerateCtrfReport', () => {
     test('all params + capabilities', () => {
       const suite = { ...Object.values(SUITES)[0] }
       suite.file = 'fullParams.test.ts'
+      const runner = getRunnerForSuite(suite)
       const input = {
         appName: 'testApp',
         appVersion: '1.0.0',
@@ -174,9 +175,10 @@ describe('GenerateCtrfReport', () => {
         osPlatform: 'darwin',
         osVersion: '10.15.7',
         osRelease: 'latest',
+        outputDir: 'customDir',
       }
-      const runner = getRunnerForSuite(suite)
       tmpReporter = new GenerateCtrfReport(input)
+
       tmpReporter.onRunnerStart(runner)
       tmpReporter.onSuiteStart(suite as any)
       tmpReporter.onTestEnd(suite.tests[0] as any)
@@ -184,9 +186,20 @@ describe('GenerateCtrfReport', () => {
       tmpReporter.onRunnerEnd(runner)
 
       expect(tmpReporter.ctrfReport.results.environment).toMatchObject({
-        ...input,
+        ...{
+          appName: 'testApp',
+          appVersion: '1.0.0',
+          buildUrl: 'http://example.com',
+          buildNumber: '100',
+          buildName: 'test build',
+          osPlatform: 'darwin',
+          osVersion: '10.15.7',
+          osRelease: 'latest',
+        },
         extra: { browserName: runner.capabilities.browserName },
       })
+
+      expect(fs.existsSync(input.outputDir)).toBe(true)
     })
 
     test('minimal', () => {

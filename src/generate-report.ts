@@ -41,17 +41,13 @@ class GenerateCtrfReport extends WDIOReporter {
   private currentBrowser = ''
 
   constructor(options: ReporterConfigOptions = {}) {
-    options = {
-      outputDir: 'ctrf',
-      minimal: false,
-      testType: 'e2e',
-      debug: false,
-      ...options,
-    }
+    options.outputDir = options.outputDir ?? 'ctrf'
+    options.minimal = options.minimal ?? false
+    options.testType = options.testType ?? 'e2e'
+    options.debug = options.debug ?? false
+    console.log('ReporterConfigOptions:', options)
     super(options)
-    if (options.outputDir) {
-      this.outputDir = options.outputDir
-    }
+    this.outputDir = options.outputDir
     this.reporterConfigOptions = options
     this.ctrfReport = {
       results: {
