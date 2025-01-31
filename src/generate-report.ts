@@ -40,7 +40,10 @@ class GenerateCtrfReport extends WDIOReporter {
   private currentBrowser = ''
 
   constructor(reporterOptions: Partial<ReporterConfigOptions>) {
-    super(reporterOptions)
+    super({
+      ...reporterOptions,
+      outputDir: reporterOptions.outputDir ?? 'ctrf',
+    })
     this.reporterConfigOptions = {
       outputDir: reporterOptions.outputDir ?? 'ctrf',
       minimal: reporterOptions.minimal ?? false,
