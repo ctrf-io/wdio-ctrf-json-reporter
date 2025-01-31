@@ -1,21 +1,20 @@
-/* eslint-disable @typescript-eslint/strict-boolean-expressions */
-/* eslint-disable no-control-regex */
 import WDIOReporter, {
   type SuiteStats,
   type RunnerStats,
   type TestStats,
 } from '@wdio/reporter'
+import { type Reporters } from '@wdio/types'
 import {
   type CtrfTest,
   type CtrfEnvironment,
   type CtrfReport,
   type CtrfTestState,
 } from '../types/ctrf'
-import fs = require('fs')
-import path = require('path')
+import * as fs from 'fs'
+import * as path from 'path'
+import logger from '@wdio/logger'
 
-interface ReporterConfigOptions {
-  outputDir?: string
+export interface CtrfReporterConfigOptions extends Partial<Reporters.Options> {
   minimal?: boolean
   testType?: string
   appName?: string
@@ -26,30 +25,30 @@ interface ReporterConfigOptions {
   buildName?: string
   buildNumber?: string
   buildUrl?: string
-  debug?: boolean
 }
 
-class GenerateCtrfReport extends WDIOReporter {
+const log = logger('CtrfReporter')
+
+export default class GenerateCtrfReport extends WDIOReporter {
   readonly ctrfReport: CtrfReport
   readonly ctrfEnvironment: CtrfEnvironment
-  private readonly reporterConfigOptions: ReporterConfigOptions
+  private readonly reporterConfigOptions: CtrfReporterConfigOptions
 
-  private readonly reporterName: string = 'wdio-ctrf-json-reporter'
-  private readonly outputDir: string = 'ctrf'
+  private readonly outputDir: string
   private currentSuite = ''
   private currentSpecFile = ''
   private currentBrowser = ''
 
-  constructor(options: ReporterConfigOptions = {}) {
-    super(
-      Object.assign(
-        { stdout: true },
-        { ...options, outputDir: options.outputDir ?? 'ctrf' }
-      )
-    )
-    if (options.outputDir) {
-      this.outputDir = options.outputDir
+  constructor(options: CtrfReporterConfigOptions = {}) {
+    options = {
+      outputDir: 'ctrf',
+      minimal: false,
+      testType: 'e2e',
+      stdout: false,
+      ...options,
     }
+    super(options)
+    this.outputDir = options.outputDir ?? 'ctrf'
     this.reporterConfigOptions = options
     this.ctrfReport = {
       results: {
@@ -70,6 +69,10 @@ class GenerateCtrfReport extends WDIOReporter {
       },
     }
     this.ctrfEnvironment = {}
+
+    if (!fs.existsSync(this.outputDir)) {
+      fs.mkdirSync(this.outputDir, { recursive: true })
+    }
   }
 
   private previousReport?: CtrfReport
@@ -86,24 +89,15 @@ class GenerateCtrfReport extends WDIOReporter {
         this.previousReport = JSON.parse(
           fs.readFileSync(reportFile, 'utf8')
         ) as CtrfReport
-        if (this.reporterConfigOptions.debug ?? false) {
-          console.debug(`${this.reporterName}: read previous report`)
-        }
+
+        log.progress(`Read previous report`)
       } catch (e) {
-        if (this.reporterConfigOptions.debug) {
-          console.debug(
-            `${this.reporterName}: Error reading previous report ${String(e)}`
-          )
-        }
+        log.progress(`Error reading previous report ${String(e)}`)
       }
     }
   }
 
   onRunnerStart(runner: RunnerStats): void {
-    if (!fs.existsSync(this.outputDir)) {
-      fs.mkdirSync(this.outputDir, { recursive: true })
-    }
-
     this.ctrfReport.results.summary.start = Date.now()
     const caps: WebdriverIO.Capabilities = runner.capabilities as any
     if (caps.browserName !== undefined) {
@@ -139,6 +133,7 @@ class GenerateCtrfReport extends WDIOReporter {
       // Invalid for Windows
       .replace(/[<>:"|?*]/g, '_')
       // Control characters (invalid for both Windows and Linux)
+      // eslint-disable-next-line no-control-regex
       .replace(/[\x00-\x1F]/g, '_')
       .trim()
       .replace(/[. ]+$/, '')
@@ -182,7 +177,7 @@ class GenerateCtrfReport extends WDIOReporter {
       duration: test._duration,
     }
 
-    if (!this.reporterConfigOptions.minimal) {
+    if (this.reporterConfigOptions.minimal === false) {
       const previousTest = this.previousReport?.results.tests.find(
         (name) => name.name === test.title
       )
@@ -196,9 +191,9 @@ class GenerateCtrfReport extends WDIOReporter {
       ctrfTest.retries =
         previousTest?.status === 'failed'
           ? (previousTest.retries ?? 0) + 1
-          : previousTest?.retries ?? test.retries ?? 0
+          : (previousTest?.retries ?? test.retries ?? 0)
       ctrfTest.flaky =
-        previousTest?.status === 'failed' || previousTest?.flaky === true
+        ((previousTest?.status === 'failed' || previousTest?.flaky) ?? false)
           ? true
           : test.state === 'passed' && (ctrfTest.retries ?? 0) > 0
       ctrfTest.suite = this.currentSuite
@@ -209,7 +204,9 @@ class GenerateCtrfReport extends WDIOReporter {
     this.ctrfReport.results.tests.push(ctrfTest)
   }
 
-  setEnvironmentDetails(reporterConfigOptions: ReporterConfigOptions): void {
+  setEnvironmentDetails(
+    reporterConfigOptions: CtrfReporterConfigOptions
+  ): void {
     this.ctrfEnvironment.appName = reporterConfigOptions.appName
 
     if (reporterConfigOptions.appVersion !== undefined) {
@@ -262,15 +259,10 @@ class GenerateCtrfReport extends WDIOReporter {
     const str = JSON.stringify(data, null, 2)
     try {
       fs.writeFileSync(filePath, str + '\n')
-      if (this.reporterConfigOptions.debug) {
-        console.debug(`${this.reporterName}: successfully written ${filePath}`)
-      }
+
+      log.progress(`Successfully written ${filePath}`)
     } catch (e) {
-      if (this.reporterConfigOptions.debug) {
-        console.debug(`${this.reporterName}: error writing report ${String(e)}`)
-      }
+      log.progress(`Error writing report ${String(e)}`)
     }
   }
 }
-
-export default GenerateCtrfReport

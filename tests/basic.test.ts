@@ -2,7 +2,11 @@ import { beforeAll, beforeEach, describe, expect, test } from 'vitest'
 import { getRunnerForSuite, SUITES } from './testdata'
 import GenerateCtrfReport from '../src'
 import * as fs from 'fs'
+import { type CtrfReporterConfigOptions } from '../src/reporter'
 
+const mockOptions: CtrfReporterConfigOptions = {
+  logFile: 'ctrf-report.log', // only used for testing
+}
 let tmpReporter: GenerateCtrfReport
 
 describe('GenerateCtrfReport', () => {
@@ -13,7 +17,7 @@ describe('GenerateCtrfReport', () => {
     describe('passed spec', () => {
       const suite = Object.values(SUITES)[0]
       beforeEach(() => {
-        tmpReporter = new GenerateCtrfReport()
+        tmpReporter = new GenerateCtrfReport(mockOptions)
         tmpReporter.onSuiteStart(suite as any)
       })
 
@@ -45,7 +49,7 @@ describe('GenerateCtrfReport', () => {
       const test2 = suite.tests[2]
 
       beforeEach(() => {
-        tmpReporter = new GenerateCtrfReport()
+        tmpReporter = new GenerateCtrfReport(mockOptions)
         tmpReporter.onSuiteStart(suite as any)
       })
 
@@ -124,7 +128,7 @@ describe('GenerateCtrfReport', () => {
     describe('skipped test', () => {
       const suite = Object.values(SUITES)[2]
       beforeEach(() => {
-        tmpReporter = new GenerateCtrfReport()
+        tmpReporter = new GenerateCtrfReport(mockOptions)
         tmpReporter.onSuiteStart(suite as any)
       })
 
@@ -144,7 +148,7 @@ describe('GenerateCtrfReport', () => {
     describe('passed spec', () => {
       const suite = Object.values(SUITES)[3]
       beforeEach(() => {
-        tmpReporter = new GenerateCtrfReport()
+        tmpReporter = new GenerateCtrfReport(mockOptions)
         tmpReporter.onSuiteStart(suite as any)
       })
 
@@ -162,7 +166,7 @@ describe('GenerateCtrfReport', () => {
   })
 
   describe('reporter params', () => {
-    test('all params + custom dir + capabilities', () => {
+    test('all params + capabilities', () => {
       const suite = { ...Object.values(SUITES)[0] }
       suite.file = 'fullParams.test.ts'
       const input = {
@@ -175,10 +179,11 @@ describe('GenerateCtrfReport', () => {
         osVersion: '10.15.7',
         osRelease: 'latest',
       }
-      const outputDir = 'ctrfCustom'
       const runner = getRunnerForSuite(suite)
-      tmpReporter = new GenerateCtrfReport({
+      const outputDir = 'ctrfCustom'
+      const tmpReporter = new GenerateCtrfReport({
         ...input,
+        ...mockOptions,
         outputDir,
       })
       tmpReporter.onRunnerStart(runner)
@@ -199,7 +204,7 @@ describe('GenerateCtrfReport', () => {
       const suite = { ...Object.values(SUITES)[1] }
       suite.file = 'minParams.test.ts'
 
-      tmpReporter = new GenerateCtrfReport({ minimal: true })
+      tmpReporter = new GenerateCtrfReport({ ...mockOptions, minimal: true })
       tmpReporter.onRunnerStart(getRunnerForSuite(suite))
       tmpReporter.onSuiteStart(suite as any)
       tmpReporter.onTestEnd(suite.tests[0] as any)
