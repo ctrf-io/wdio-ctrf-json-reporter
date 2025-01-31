@@ -13,7 +13,7 @@ describe('GenerateCtrfReport', () => {
     describe('passed spec', () => {
       const suite = Object.values(SUITES)[0]
       beforeEach(() => {
-        tmpReporter = new GenerateCtrfReport({})
+        tmpReporter = new GenerateCtrfReport()
         tmpReporter.onSuiteStart(suite as any)
       })
 
@@ -45,7 +45,7 @@ describe('GenerateCtrfReport', () => {
       const test2 = suite.tests[2]
 
       beforeEach(() => {
-        tmpReporter = new GenerateCtrfReport({})
+        tmpReporter = new GenerateCtrfReport()
         tmpReporter.onSuiteStart(suite as any)
       })
 
@@ -124,7 +124,7 @@ describe('GenerateCtrfReport', () => {
     describe('skipped test', () => {
       const suite = Object.values(SUITES)[2]
       beforeEach(() => {
-        tmpReporter = new GenerateCtrfReport({})
+        tmpReporter = new GenerateCtrfReport()
         tmpReporter.onSuiteStart(suite as any)
       })
 
@@ -144,7 +144,7 @@ describe('GenerateCtrfReport', () => {
     describe('passed spec', () => {
       const suite = Object.values(SUITES)[3]
       beforeEach(() => {
-        tmpReporter = new GenerateCtrfReport({})
+        tmpReporter = new GenerateCtrfReport()
         tmpReporter.onSuiteStart(suite as any)
       })
 
