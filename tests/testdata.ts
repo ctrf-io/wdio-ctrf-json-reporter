@@ -10,106 +10,119 @@ export function getRunnerForSuite(suite: any): any {
   }
 }
 
-const suiteIds = [
-  'suiteDefaultPassing',
-  'suiteWithFailedTests',
-  'suiteWithSkippedTest',
-  'suiteWithRetriedTest',
-]
-
 export const SUITES = {
-  [suiteIds[0]]: {
-    uid: suiteIds[0],
-    title: suiteIds[0].slice(0, -1),
-    file: '/foo/bar/suite0_passed.e2e.js',
+  suite_2passed: {
+    uid: 'suite_2passed_id',
+    fullTitle: 'suite_2passed_fullTitle',
+    file: '/tests/sample/suite_2passed.e2e.js',
     hooks: [],
     tests: [
       {
         start,
-        uid: 'foo1',
-        title: 'foo',
+        uid: 's1t1',
+        title: 's1t1 - passed',
         state: 'passed',
         type: 'test',
       },
       {
         start,
-        uid: 'bar1',
-        title: 'bar',
+        uid: 's2t2',
+        title: 's2t2 - passed',
         state: 'passed',
         type: 'test',
       },
     ],
   },
-  [suiteIds[1]]: {
-    uid: suiteIds[1],
-    title: suiteIds[1].slice(0, -1),
-    file: '/bar/foo/suite1_failed.e2e.js',
+
+  suite_1passed_1skipped: {
+    uid: 'suite_1passed_1skipped_id',
+    fullTitle: 'suite_1passed_1skipped_fullTitle',
+    file: '/tests/sample/suite_1passed_1skipped_id.e2e.js',
     hooks: [],
     tests: [
       {
-        uid: 'some test1',
-        title: 'some test',
+        uid: 's2t1',
+        title: 's2t1 - passed',
         start,
         state: 'passed',
         type: 'test',
       },
       {
-        uid: 'a failed test2',
-        title: 'a failed test',
-        start,
-        state: 'failed',
-        type: 'test',
-        error: {
-          message: 'expected foo to equal bar',
-          stack: 'Failed test stack trace',
-        },
-      },
-      {
-        uid: 'a failed test3',
-        title: 'a failed test with no stack',
-        start,
-        state: 'failed',
-        error: {
-          message: 'expected foo to equal bar',
-        },
-      },
-    ],
-  },
-  [suiteIds[2]]: {
-    uid: suiteIds[2],
-    title: suiteIds[2].slice(0, -1),
-    file: '/bar/loo/suite2_skipped.e2e.js',
-    hooks: [],
-    tests: [
-      {
-        uid: 'foo bar baz1',
-        title: 'foo bar baz',
-        start,
-        state: 'passed',
-        type: 'test',
-      },
-      {
-        uid: 'a skipped test2',
-        title: 'a skipped test',
+        uid: 's2t2',
+        title: 's2t2 - skipped',
         start,
         state: 'skipped',
         type: 'test',
       },
     ],
   },
-  [suiteIds[3]]: {
-    uid: suiteIds[3],
-    title: suiteIds[0].slice(0, -1),
-    file: '/foo/bar/suite3_passed_test_retry.e2e.js',
+  suite_1passed_1failed: {
+    uid: 'suite_1passed_1skipped_id',
+    fullTitle: 'suite_1passed_1skipped_fullTitle',
+    file: '/tests/sample/suite_1passed_1skipped_id.e2e.js',
     hooks: [],
     tests: [
       {
+        uid: 's3t1',
+        title: 's3t1 - passed',
         start,
-        uid: 'foo1',
-        title: 'foo',
         state: 'passed',
-        retries: 1,
         type: 'test',
+      },
+      {
+        uid: 's3t2',
+        title: 's3t2 - failed',
+        start,
+        state: 'failed',
+        type: 'test',
+        error: {
+          name: 'Error',
+          message: 'Error Message',
+          stack: 'Error Stack',
+          type: 'Error',
+          expected: undefined,
+          actual: undefined,
+        },
+      },
+    ],
+  },
+  suite_1failed_withRetries: {
+    uid: 'suite_1failed_withRetries_id',
+    fullTitle: 'suite_1failed_withRetries_fullTitle',
+    file: '/tests/sample/suite_1failed_withRetries.e2e.js',
+    hooks: [],
+    tests: [
+      {
+        uid: 's4t1',
+        title: 's4t4 - failed after retries',
+        start,
+        state: 'failed',
+        type: 'test',
+        retries: 2,
+        error: {
+          name: 'Error',
+          message: 'Error Message',
+          stack: 'Error Stack',
+          type: 'Error',
+          expected: undefined,
+          actual: undefined,
+        },
+      },
+    ],
+  },
+  suite_1passed_withRetries: {
+    uid: 'suite_1passed_withRetries_id',
+    fullTitle: 'suite_1passed_withRetries_fullTitle',
+    file: '/tests/sample/suite_1passed_withRetries.e2e.js',
+    hooks: [],
+    tests: [
+      {
+        uid: 's5t1',
+        title: 's5t4 - passed after retries',
+        start,
+        state: 'passed',
+        type: 'test',
+        retries: 1,
       },
     ],
   },

@@ -1,12 +1,16 @@
 {
   "compilerOptions": {
-    "target": "ES2023",
-    "module": "ESNext",
-    "moduleResolution": "node",
+    "target": "es6",
+    "module": "commonjs",
     "strict": true,
     "outDir": "./dist",
     "declaration": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts"]
+  "include": [
+    "src/**/*.ts",
+    "tests/**/*.ts",
+    "vitest.config.ts",
+    "wdio.conf.ts"
+  ]
 }

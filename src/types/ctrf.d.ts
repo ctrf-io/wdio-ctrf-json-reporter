@@ -1,16 +1,16 @@
 export interface CtrfReport {
-  results: Results
+  results: CtrfResults
 }
 
-export interface Results {
+export interface CtrfResults {
   tool: Tool
-  summary: Summary
+  summary: CtrfSummary
   tests: CtrfTest[]
   environment?: CtrfEnvironment
   extra?: Record<string, any>
 }
 
-export interface Summary {
+export interface CtrfSummary {
   tests: number
   passed: number
   failed: number

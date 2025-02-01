@@ -9,7 +9,7 @@ import {
   type CtrfEnvironment,
   type CtrfReport,
   type CtrfTestState,
-} from '../types/ctrf'
+} from './types/ctrf'
 import * as fs from 'fs'
 import * as path from 'path'
 import logger from '@wdio/logger'
@@ -80,36 +80,35 @@ export default class GenerateCtrfReport extends WDIOReporter {
   onSuiteStart(suite: SuiteStats): void {
     this.currentSuite = suite.fullTitle
     this.currentSpecFile = suite.file
-    const reportFile = path.join(
-      this.outputDir,
-      this.getReportFileName(this.currentSpecFile)
-    )
-    if (fs.existsSync(reportFile)) {
-      try {
-        this.previousReport = JSON.parse(
-          fs.readFileSync(reportFile, 'utf8')
-        ) as CtrfReport
-
-        log.progress(`Read previous report`)
-      } catch (e) {
-        log.progress(`Error reading previous report ${String(e)}`)
-      }
-    }
   }
 
   onRunnerStart(runner: RunnerStats): void {
     this.ctrfReport.results.summary.start = Date.now()
     const caps: WebdriverIO.Capabilities = runner.capabilities as any
-    if (caps.browserName !== undefined) {
+    if (caps?.browserName !== undefined) {
       this.currentBrowser = caps.browserName
     }
-    if (caps.browserVersion !== undefined) {
+    if (caps?.browserVersion !== undefined) {
       this.currentBrowser += ` ${caps.browserVersion}`
     }
     this.setEnvironmentDetails(this.reporterConfigOptions)
     this.ctrfEnvironment.extra = caps
     if (this.hasEnvironmentDetails(this.ctrfEnvironment)) {
       this.ctrfReport.results.environment = this.ctrfEnvironment
+    }
+    const oldCtfFilePath = path.join(
+      this.outputDir,
+      this.getReportFileName(runner.specs[0])
+    )
+    if (fs.existsSync(oldCtfFilePath)) {
+      try {
+        this.previousReport = JSON.parse(
+          fs.readFileSync(oldCtfFilePath, 'utf8')
+        ) as CtrfReport
+        log.progress(`Read previous report`)
+      } catch (e) {
+        log.progress(`Error reading previous report ${String(e)}`)
+      }
     }
   }
 
@@ -121,7 +120,7 @@ export default class GenerateCtrfReport extends WDIOReporter {
   private getReportFileName(specFilePath: string): string {
     // Find relative path of spec file
     let specRelativePath = specFilePath
-    if (specFilePath.startsWith(process.cwd())) {
+    if (specFilePath.includes(process.cwd())) {
       specRelativePath = specFilePath.split(process.cwd())[1]
     }
     // Replace path separator with hyphen and remove file extension
@@ -137,10 +136,11 @@ export default class GenerateCtrfReport extends WDIOReporter {
       .replace(/[\x00-\x1F]/g, '_')
       .trim()
       .replace(/[. ]+$/, '')
-    return `ctrf-report-${uniqueIdentifier}.json`
+    return `ctrf-${uniqueIdentifier}.json`
   }
 
   onRunnerEnd(runner: RunnerStats): void {
+    this.ctrfReport.results.summary.stop = Date.now()
     const fileName = this.getReportFileName(runner.specs[0])
     this.writeReportToFile(this.ctrfReport, fileName)
   }
@@ -188,14 +188,20 @@ export default class GenerateCtrfReport extends WDIOReporter {
       ctrfTest.trace = this.extractFailureDetails(test).trace
       ctrfTest.rawStatus = test.state
       ctrfTest.type = this.reporterConfigOptions.testType ?? 'e2e'
-      ctrfTest.retries =
-        previousTest?.status === 'failed'
-          ? (previousTest.retries ?? 0) + 1
-          : (previousTest?.retries ?? test.retries ?? 0)
-      ctrfTest.flaky =
-        ((previousTest?.status === 'failed' || previousTest?.flaky) ?? false)
-          ? true
-          : test.state === 'passed' && (ctrfTest.retries ?? 0) > 0
+
+      if (previousTest) {
+        if (previousTest.status === 'failed') {
+          ctrfTest.retries = (previousTest.retries ?? 0) + 1
+        }
+      } else {
+        ctrfTest.retries = test.retries ?? 0
+      }
+
+      ctrfTest.flaky = (ctrfTest.retries ?? 0) > 0
+      // previousTest?.status === 'failed' || previousTest?.flaky === true
+      //   ? // ((previousTest?.status === 'failed' || previousTest?.flaky) ?? false)
+      //     true
+      //   : test.state === 'passed' && (ctrfTest.retries ?? 0) > 0
       ctrfTest.suite = this.currentSuite
       ctrfTest.filePath = this.currentSpecFile
       ctrfTest.browser = this.currentBrowser
