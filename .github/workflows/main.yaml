@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      checks: write
 
     steps:
       - uses: actions/checkout@v3
@@ -26,3 +27,4 @@ jobs:
         if: success() || failure()
         with:
           report_paths: 'junit-reports/*.xml'
+          annotate_only: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
