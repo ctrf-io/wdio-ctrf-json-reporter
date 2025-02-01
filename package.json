@@ -9,12 +9,10 @@
   "homepage": "https://ctrf.io",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && eslint . && prettier --check .",
     "test": "vitest",
     "test:ci": "vitest --watch=false",
-    "lint": "eslint .",
-    "format": "prettier --write .",
-    "format-check": "prettier --check ."
+    "lint": "eslint . && prettier --check ."
   },
   "files": [
     "dist/",

@@ -20,8 +20,6 @@ jobs:
           node-version: '22.x'
       - run: npm ci
       - run: npm run build
-      - run: npm run lint-check
-      - run: npm run format-check
       - run: npm run test:ci
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v5
