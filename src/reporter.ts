@@ -31,7 +31,6 @@ const log = logger('CtrfReporter')
 
 export default class GenerateCtrfReport extends WDIOReporter {
   readonly ctrfReport: CtrfReport
-  readonly ctrfEnvironment: CtrfEnvironment
   private readonly reporterConfigOptions: CtrfReporterConfigOptions
 
   private readonly outputDir: string
@@ -68,7 +67,6 @@ export default class GenerateCtrfReport extends WDIOReporter {
         tests: [],
       },
     }
-    this.ctrfEnvironment = {}
 
     if (!fs.existsSync(this.outputDir)) {
       fs.mkdirSync(this.outputDir, { recursive: true })
@@ -85,17 +83,24 @@ export default class GenerateCtrfReport extends WDIOReporter {
   onRunnerStart(runner: RunnerStats): void {
     this.ctrfReport.results.summary.start = Date.now()
     const caps: WebdriverIO.Capabilities = runner.capabilities as any
-    if (caps?.browserName !== undefined) {
+    if (caps?.browserName) {
       this.currentBrowser = caps.browserName
     }
-    if (caps?.browserVersion !== undefined) {
+    if (caps?.browserVersion) {
       this.currentBrowser += ` ${caps.browserVersion}`
     }
-    this.setEnvironmentDetails(this.reporterConfigOptions)
-    this.ctrfEnvironment.extra = caps
-    if (this.hasEnvironmentDetails(this.ctrfEnvironment)) {
-      this.ctrfReport.results.environment = this.ctrfEnvironment
+    this.ctrfReport.results.environment = {
+      appName: this.reporterConfigOptions.appName,
+      appVersion: this.reporterConfigOptions.appVersion,
+      osPlatform: this.reporterConfigOptions.osPlatform,
+      osRelease: this.reporterConfigOptions.osRelease,
+      osVersion: this.reporterConfigOptions.osVersion,
+      buildName: this.reporterConfigOptions.buildName,
+      buildNumber: this.reporterConfigOptions.buildNumber,
+      buildUrl: this.reporterConfigOptions.buildUrl,
+      extra: caps,
     }
+
     const oldCtfFilePath = path.join(
       this.outputDir,
       this.getReportFileName(runner.specs[0])
@@ -182,8 +187,7 @@ export default class GenerateCtrfReport extends WDIOReporter {
         (name) => name.name === test.title
       )
       ctrfTest.start = Math.floor(test.start.getTime() / 1000)
-      ctrfTest.stop =
-        test.end !== undefined ? Math.floor(test.end.getTime() / 1000) : 0
+      ctrfTest.stop = test.end ? Math.floor(test.end.getTime() / 1000) : 0
       ctrfTest.message = this.extractFailureDetails(test).message
       ctrfTest.trace = this.extractFailureDetails(test).trace
       ctrfTest.rawStatus = test.state
@@ -198,10 +202,6 @@ export default class GenerateCtrfReport extends WDIOReporter {
       }
 
       ctrfTest.flaky = (ctrfTest.retries ?? 0) > 0
-      // previousTest?.status === 'failed' || previousTest?.flaky === true
-      //   ? // ((previousTest?.status === 'failed' || previousTest?.flaky) ?? false)
-      //     true
-      //   : test.state === 'passed' && (ctrfTest.retries ?? 0) > 0
       ctrfTest.suite = this.currentSuite
       ctrfTest.filePath = this.currentSpecFile
       ctrfTest.browser = this.currentBrowser
@@ -210,45 +210,17 @@ export default class GenerateCtrfReport extends WDIOReporter {
     this.ctrfReport.results.tests.push(ctrfTest)
   }
 
-  setEnvironmentDetails(
-    reporterConfigOptions: CtrfReporterConfigOptions
-  ): void {
-    this.ctrfEnvironment.appName = reporterConfigOptions.appName
-
-    if (reporterConfigOptions.appVersion !== undefined) {
-      this.ctrfEnvironment.appVersion = reporterConfigOptions.appVersion
-    }
-    if (reporterConfigOptions.osPlatform !== undefined) {
-      this.ctrfEnvironment.osPlatform = reporterConfigOptions.osPlatform
-    }
-    if (reporterConfigOptions.osRelease !== undefined) {
-      this.ctrfEnvironment.osRelease = reporterConfigOptions.osRelease
-    }
-    if (reporterConfigOptions.osVersion !== undefined) {
-      this.ctrfEnvironment.osVersion = reporterConfigOptions.osVersion
-    }
-    if (reporterConfigOptions.buildName !== undefined) {
-      this.ctrfEnvironment.buildName = reporterConfigOptions.buildName
-    }
-    if (reporterConfigOptions.buildNumber !== undefined) {
-      this.ctrfEnvironment.buildNumber = reporterConfigOptions.buildNumber
-    }
-    if (reporterConfigOptions.buildUrl !== undefined) {
-      this.ctrfEnvironment.buildUrl = reporterConfigOptions.buildUrl
-    }
-  }
-
   hasEnvironmentDetails(environment: CtrfEnvironment): boolean {
     return Object.keys(environment).length > 0
   }
 
   extractFailureDetails(testResult: TestStats): Partial<CtrfTest> {
-    if (testResult.state === 'failed' && testResult.error !== undefined) {
+    if (testResult.state === 'failed' && testResult.error) {
       const failureDetails: Partial<CtrfTest> = {}
-      if (testResult.error.message !== undefined) {
+      if (testResult.error.message) {
         failureDetails.message = testResult.error.message
       }
-      if (testResult.error.stack !== undefined) {
+      if (testResult.error.stack) {
         failureDetails.trace = testResult.error.stack
       }
       return failureDetails
