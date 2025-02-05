@@ -27,8 +27,7 @@
   "author": "Matthew Thomas",
   "license": "MIT",
   "dependencies": {
-    "@wdio/reporter": "^9.6.3",
-    "@wdio/logger": "^9.4.4"
+    "@wdio/reporter": "^8.41.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",

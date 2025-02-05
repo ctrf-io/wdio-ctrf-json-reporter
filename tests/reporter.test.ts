@@ -231,7 +231,7 @@ describe('Reporter output', () => {
           browser: 'chrome',
           duration: undefined,
           filePath: suite.file,
-          flaky: true,
+          flaky: false,
           message: suite.tests[0].error?.message,
           name: suite.tests[0].title,
           rawStatus: 'failed',
@@ -363,7 +363,7 @@ describe('Reporter output', () => {
       ])
     })
 
-    test('second run - 1 passed, 1 failure, 1 flaky', () => {
+    test('second run - 1 passed, 1 failure, 0 flaky', () => {
       tmpReporter.onRunnerStart(getRunnerForSuite(suite))
       tmpReporter.onSuiteStart(suite as any)
       tmpReporter.onTestStart(test0 as any)
@@ -404,7 +404,7 @@ describe('Reporter output', () => {
           browser: 'chrome',
           duration: undefined,
           filePath: suite.file,
-          flaky: true,
+          flaky: false,
           message: suite.tests[1].error?.message,
           name: suite.tests[1].title,
           rawStatus: 'failed',
@@ -419,7 +419,7 @@ describe('Reporter output', () => {
       ])
     })
 
-    test('second run - 2 passed, 0 failures, 1 flaky', () => {
+    test('third run - 2 passed, 0 failures, 1 flaky', () => {
       const test1fixed = { ...test1 }
       test1fixed.error = undefined
       test1fixed.state = 'passed'

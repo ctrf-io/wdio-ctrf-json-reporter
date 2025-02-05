@@ -12,7 +12,6 @@ import {
 } from './types/ctrf'
 import * as fs from 'fs'
 import * as path from 'path'
-import logger from '@wdio/logger'
 
 export interface CtrfReporterConfigOptions extends Partial<Reporters.Options> {
   minimal?: boolean
@@ -26,8 +25,6 @@ export interface CtrfReporterConfigOptions extends Partial<Reporters.Options> {
   buildNumber?: string
   buildUrl?: string
 }
-
-const log = logger('CtrfReporter')
 
 export default class GenerateCtrfReport extends WDIOReporter {
   readonly ctrfReport: CtrfReport
@@ -110,9 +107,8 @@ export default class GenerateCtrfReport extends WDIOReporter {
         this.previousReport = JSON.parse(
           fs.readFileSync(oldCtfFilePath, 'utf8')
         ) as CtrfReport
-        log.progress(`Read previous report`)
       } catch (e) {
-        log.progress(`Error reading previous report ${String(e)}`)
+        console.error(`CTRF: Error reading previous report ${String(e)}`)
       }
     }
   }
@@ -201,7 +197,15 @@ export default class GenerateCtrfReport extends WDIOReporter {
         ctrfTest.retries = test.retries ?? 0
       }
 
-      ctrfTest.flaky = (ctrfTest.retries ?? 0) > 0
+      if (previousTest) {
+        if (previousTest.status === 'failed') {
+          ctrfTest.flaky = test.state === 'passed'
+        } else {
+          ctrfTest.flaky = false
+        }
+      } else {
+        ctrfTest.flaky = test.state === 'passed' && (test.retries ?? 0) > 0
+      }
       ctrfTest.suite = this.currentSuite
       ctrfTest.filePath = this.currentSpecFile
       ctrfTest.browser = this.currentBrowser
@@ -237,10 +241,8 @@ export default class GenerateCtrfReport extends WDIOReporter {
     const str = JSON.stringify(data, null, 2)
     try {
       fs.writeFileSync(filePath, str + '\n')
-
-      log.progress(`Successfully written ${filePath}`)
     } catch (e) {
-      log.progress(`Error writing report ${String(e)}`)
+      console.error(`CTRF: Error writing report ${String(e)}`)
     }
   }
 }
