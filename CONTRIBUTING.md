@@ -4,7 +4,7 @@ First off, thank you for considering contributing to this project.
 
 ## Reporting Issues
 
-Before submitting an issue, please check the issue tracker to ensure that the issue hasn't already been reported. If you find your issue already reported, you can subscribe to that issue to receive updates. If you have any additional information to add, please comment on the issue. If the issue is unnasigned and you'd like to contribute, assign the issue to yourself.
+Before submitting an issue, please check the issue tracker to ensure that the issue hasn't already been reported. If you find your issue already reported, you can subscribe to that issue to receive updates. If you have any additional information to add, please comment on the issue. If the issue is unassigned and you'd like to contribute, assign the issue to yourself.
 
 ## How to Contribute
 

@@ -9,32 +9,32 @@
   "homepage": "https://ctrf.io",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
-    "test": "jest",
-    "lint": "eslint . --ext .ts --fix",
-    "lint-check": "eslint . --ext .ts",
-    "format": "prettier --write .",
-    "format-check": "prettier --check ."
+    "build": "tsc && eslint . && prettier --check .",
+    "test": "vitest",
+    "test:ci": "vitest --watch=false",
+    "lint": "eslint . && prettier --check ."
   },
   "files": [
     "dist/",
     "README.md"
   ],
+  "keywords": [
+    "wdio-reporter",
+    "wdio",
+    "reporter",
+    "ctrf"
+  ],
   "author": "Matthew Thomas",
   "license": "MIT",
+  "dependencies": {
+    "@wdio/reporter": "^8.41.0"
+  },
   "devDependencies": {
-    "@types/mocha": "^10.0.3",
-    "@typescript-eslint/eslint-plugin": "^6.15.0",
-    "@typescript-eslint/parser": "^6.15.0",
-    "@wdio/reporter": "^8.20.0",
-    "eslint": "^8.54.0",
-    "eslint-config-prettier": "^9.0.0",
-    "eslint-config-standard-with-typescript": "^40.0.0",
-    "eslint-plugin-import": "^2.29.0",
-    "eslint-plugin-n": "^16.3.1",
-    "eslint-plugin-prettier": "^5.0.1",
-    "eslint-plugin-promise": "^6.1.1",
-    "prettier": "^3.1.1",
-    "typescript": "^5.2.2"
+    "@eslint/js": "^9.19.0",
+    "eslint": "^9.19.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.22.0",
+    "vitest": "^3.0.4"
   }
 }
