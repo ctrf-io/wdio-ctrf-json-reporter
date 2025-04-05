@@ -1,5 +1,6 @@
 dist
 node_modules
 ctrf
+vitest-ctrf
 junit-reports
 *.log
