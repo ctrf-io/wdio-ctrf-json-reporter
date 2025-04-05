@@ -12,6 +12,7 @@ import {
 } from './types/ctrf'
 import * as fs from 'fs'
 import * as path from 'path'
+import { fileURLToPath } from 'url'
 
 export interface CtrfReporterConfigOptions extends Partial<Reporters.Options> {
   minimal?: boolean
@@ -119,10 +120,13 @@ export default class GenerateCtrfReport extends WDIOReporter {
   }
 
   private getReportFileName(specFilePath: string): string {
+    if (specFilePath.startsWith('file://')) {
+      specFilePath = fileURLToPath(specFilePath)
+    }
     // Find relative path of spec file
     let specRelativePath = specFilePath
     if (specFilePath.includes(process.cwd())) {
-      specRelativePath = specFilePath.split(process.cwd())[1]
+      specRelativePath = path.relative(process.cwd(), specFilePath)
     }
     // Replace path separator with hyphen and remove file extension
     const uniqueIdentifier = specRelativePath
