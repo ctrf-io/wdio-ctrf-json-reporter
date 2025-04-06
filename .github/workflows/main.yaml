@@ -7,18 +7,11 @@ on:
   pull_request:
     branches:
       - '**'
-
-permissions:
-  pull-requests: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      checks: write
       pull-requests: write
-
     steps:
       - uses: actions/checkout@v3
       - name: Use Node.js 22.x
@@ -38,3 +31,5 @@ jobs:
           failed-report: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: always()
+
