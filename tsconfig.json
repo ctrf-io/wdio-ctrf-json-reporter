@@ -5,7 +5,9 @@
     "strict": true,
     "outDir": "./dist",
     "declaration": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "rootDir": "./src",
+    "sourceMap": true
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts", "vitest.config.ts"]
+  "include": ["src/**/*.ts"]
 }
