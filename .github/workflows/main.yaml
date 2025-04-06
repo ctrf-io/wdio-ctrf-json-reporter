@@ -35,8 +35,5 @@ jobs:
           pull-request: true
           summary-report: true
           failed-report: true
-      - name: Publish Test Report
-        uses: ctrf-io/github-test-reporter@v1.0.12
-        with:
-          report-path: 'vitest-ctrf/*.json'
-          pull-request-report: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
