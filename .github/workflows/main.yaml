@@ -28,7 +28,7 @@ jobs:
       - run: npm run build
       - run: npm run test:ci
       - name: Publish Test Report
-        uses: ctrf-io/github-test-reporter@v1.0.12
+        uses: ctrf-io/github-test-reporter@v1
         with:
           report-path: 'vitest-ctrf/*.json'
           summary: true
