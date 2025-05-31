@@ -36,7 +36,6 @@ export async function mergeResults(
  * @param dir - Directory containing CTRF report files.
  * @param filePattern - Regex pattern to match report files (e.g., '*.json' or 'wdio-.*-ctrf-json-reporter.json').
  * @returns An array of parsed CtrfReport objects.
- * @throws If the directory does not exist or no valid reports are found.
  */
 export async function readReports(
   dir: string,
@@ -44,7 +43,8 @@ export async function readReports(
 ): Promise<CtrfReport[]> {
   const directoryPath = resolve(dir)
   if (!existsSync(directoryPath)) {
-    throw new Error(`The directory '${directoryPath}' does not exist.`)
+    console.log(`The directory '${directoryPath}' does not exist.`)
+    return []
   }
 
   const fileNames = (await readdir(dir)).filter((file) =>
@@ -67,7 +67,7 @@ export async function readReports(
   }
 
   if (reports.length === 0) {
-    throw new Error(
+    console.log(
       `No valid CTRF reports found in directory '${dir}' with pattern '${filePattern}'.`
     )
   }
