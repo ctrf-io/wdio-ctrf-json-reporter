@@ -122,15 +122,15 @@ reporters: [
 
 With WDIO v5 upwards, reporting has moved from a centralized process to one that is handled by each of the "sessions" spun up for parallel test execution. This change helped reduce the amount of chatter during WDIO test execution and thus improved performance. The downside is it is no longer possible to get a single report for all test execution.
 
-The [ctrf-cli](https://github.com/ctrf-io/ctrf-cli) package provides a method to merge the multiple json files into a single file.
+```js
+import { mergeResults } from 'wdio-ctrf-json-reporter'
 
-After executing your tests, use the following command:
+// Merge all CTRF JSON reports in the 'ctrf' directory matching the default pattern
+await mergeResults('ctrf')
 
-```sh
-npx ctrf merge <directory>
+// Merge with a custom file pattern and output file name
+await mergeResults('ctrf', 'my-custom-pattern.*.json', 'my-merged-report.json')
 ```
-
-Replace directory with the path to the directory containing the CTRF reports you want to merge.
 
 ## Test Object Properties
 

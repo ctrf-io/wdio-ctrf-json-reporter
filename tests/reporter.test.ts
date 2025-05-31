@@ -364,12 +364,13 @@ describe('Reporter output', () => {
     })
 
     test('second run - 1 passed, 1 failure, 0 flaky', () => {
+      const test1fixed = { ...test1, retries: 1, flaky: false }
       tmpReporter.onRunnerStart(getRunnerForSuite(suite))
       tmpReporter.onSuiteStart(suite as any)
       tmpReporter.onTestStart(test0 as any)
       tmpReporter.onTestEnd(test0 as any)
-      tmpReporter.onTestStart(test1 as any)
-      tmpReporter.onTestEnd(test1 as any)
+      tmpReporter.onTestStart(test1fixed as any)
+      tmpReporter.onTestEnd(test1fixed as any)
       tmpReporter.onSuiteEnd(suite as any)
       tmpReporter.onRunnerEnd(getRunnerForSuite(suite))
 
@@ -423,6 +424,7 @@ describe('Reporter output', () => {
       const test1fixed = { ...test1 }
       test1fixed.error = undefined
       test1fixed.state = 'passed'
+      test1fixed.retries = 2 // simulate retries
 
       tmpReporter.onRunnerStart(getRunnerForSuite(suite))
       tmpReporter.onSuiteStart(suite as any)
