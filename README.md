@@ -23,10 +23,13 @@ CTRF is a JSON test report standard with a seamless developer tool integration
 </div>
 
 <p style="font-size: 14px; margin: 1rem 0;">
-Maintained by <a href="https://github.com/ma11hewthomas">Matthew Thomas</a><br/>
+
 Contributions are very welcome! <br/>
-Explore more <a href="https://www.ctrf.io/integrations">integrations</a>
+Explore more <a href="https://www.ctrf.io/integrations">integrations</a> <br/>
+<a href="https://app.formbricks.com/s/cmefs524mhlh1tl01gkpvefrb">Let us know your thoughts here</a>.
+
 </p>
+</div>
 </div>
 
 ## Features
@@ -65,16 +68,6 @@ Explore more <a href="https://www.ctrf.io/integrations">integrations</a>
   }
 }
 ```
-
-## What is CTRF?
-
-CTRF is a universal JSON test report schema that addresses the lack of a standardized format for JSON test reports.
-
-**Consistency Across Tools:** Different testing tools and frameworks often produce reports in varied formats. CTRF ensures a uniform structure, making it easier to understand and compare reports, regardless of the testing tool used.
-
-**Language and Framework Agnostic:** It provides a universal reporting schema that works seamlessly with any programming language and testing framework.
-
-**Facilitates Better Analysis:** With a standardized format, programatically analyzing test outcomes across multiple platforms becomes more straightforward.
 
 ## Installation
 
@@ -152,6 +145,16 @@ The test object in the report includes the following [CTRF properties](https://c
 | `retries`   | Number  | Optional | The number of retries attempted for the test.                                       |
 | `flaky`     | Boolean | Optional | Indicates whether the test result is flaky.                                         |
 | `browser`   | String  | Optional | The browser used for the test.                                                      |
+
+## What is CTRF?
+
+CTRF is a universal JSON test report schema that addresses the lack of a standardized format for JSON test reports.
+
+**Consistency Across Tools:** Different testing tools and frameworks often produce reports in varied formats. CTRF ensures a uniform structure, making it easier to understand and compare reports, regardless of the testing tool used.
+
+**Language and Framework Agnostic:** It provides a universal reporting schema that works seamlessly with any programming language and testing framework.
+
+**Facilitates Better Analysis:** With a standardized format, programatically analyzing test outcomes across multiple platforms becomes more straightforward.
 
 ## Support Us
 

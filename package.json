@@ -4,7 +4,11 @@
   "description": "A WebriverIO JSON test reporter to create test results reports",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Ma11hewThomas/wdio-ctrf-json-reporter.git"
+    "url": "git+https://github.com/ctrf-io/wdio-ctrf-json-reporter.git"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "homepage": "https://ctrf.io",
   "main": "dist/index.js",
@@ -12,7 +16,8 @@
     "build": "tsc && eslint . && prettier --write .",
     "test": "vitest",
     "test:ci": "vitest --watch=false",
-    "lint": "eslint . && prettier --check ."
+    "lint": "eslint . && prettier --check .",
+    "all": "npm run build && npm run test:ci && npm run lint"
   },
   "files": [
     "dist/",
