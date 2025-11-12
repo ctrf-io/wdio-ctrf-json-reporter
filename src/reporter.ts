@@ -2,17 +2,15 @@ import WDIOReporter, {
   type SuiteStats,
   type RunnerStats,
   type TestStats,
+  type HookStats,
 } from '@wdio/reporter'
 import { type Reporters } from '@wdio/types'
 import {
   type CtrfTest,
   type CtrfEnvironment,
   type CtrfReport,
-  type CtrfTestState,
-} from './types/ctrf'
-import * as fs from 'fs'
-import * as path from 'path'
-import { fileURLToPath } from 'url'
+} from './types/ctrf.js'
+import { existsSync, mkdirSync } from 'fs'
 
 export interface CtrfReporterConfigOptions extends Partial<Reporters.Options> {
   minimal?: boolean
@@ -37,6 +35,9 @@ export default class GenerateCtrfReport extends WDIOReporter {
   private currentBrowser = ''
 
   constructor(options: CtrfReporterConfigOptions = {}) {
+    if (options?.logFile?.endsWith('.log')) {
+      options.logFile = options.logFile.slice(0, -4) + '.json'
+    }
     options = {
       outputDir: 'ctrf',
       minimal: false,
@@ -66,12 +67,10 @@ export default class GenerateCtrfReport extends WDIOReporter {
       },
     }
 
-    if (!fs.existsSync(this.outputDir)) {
-      fs.mkdirSync(this.outputDir, { recursive: true })
+    if (!existsSync(this.outputDir)) {
+      mkdirSync(this.outputDir, { recursive: true })
     }
   }
-
-  private previousReport?: CtrfReport
 
   onSuiteStart(suite: SuiteStats): void {
     this.currentSuite = suite.fullTitle
@@ -98,62 +97,35 @@ export default class GenerateCtrfReport extends WDIOReporter {
       buildUrl: this.reporterConfigOptions.buildUrl,
       extra: caps,
     }
+  }
 
-    const oldCtfFilePath = path.join(
-      this.outputDir,
-      this.getReportFileName(runner.specs[0])
-    )
-    if (fs.existsSync(oldCtfFilePath)) {
-      try {
-        this.previousReport = JSON.parse(
-          fs.readFileSync(oldCtfFilePath, 'utf8')
-        ) as CtrfReport
-      } catch (e) {
-        console.error(`CTRF: Error reading previous report ${String(e)}`)
-      }
+  onHookEnd(stats: HookStats): void {
+    if (stats.error) {
+      this.handleTestOrHookEnd(stats, stats.state)
     }
   }
 
-  onTestEnd(testStats: TestStats): void {
-    this.updateCtrfTestResultsFromTestStats(testStats, testStats.state)
-    this.updateCtrfTotalsFromTestStats(testStats)
+  onTestEnd(stats: TestStats | HookStats): void {
+    this.handleTestOrHookEnd(stats, stats.state)
   }
 
-  private getReportFileName(specFilePath: string): string {
-    if (specFilePath.startsWith('file://')) {
-      specFilePath = fileURLToPath(specFilePath)
-    }
-    // Find relative path of spec file
-    let specRelativePath = specFilePath
-    if (specFilePath.includes(process.cwd())) {
-      specRelativePath = path.relative(process.cwd(), specFilePath)
-    }
-    // Replace path separator with hyphen and remove file extension
-    const uniqueIdentifier = specRelativePath
-      .split(path.sep)
-      .join('-')
-      // Remove file extension
-      .replace(/\.(js|ts)$/, '')
-      // Invalid for Windows
-      .replace(/[<>:"|?*]/g, '_')
-      // Control characters (invalid for both Windows and Linux)
-      // eslint-disable-next-line no-control-regex
-      .replace(/[\x00-\x1F]/g, '_')
-      .trim()
-      .replace(/[. ]+$/, '')
-    return `ctrf-${uniqueIdentifier}.json`
-  }
-
-  onRunnerEnd(runner: RunnerStats): void {
+  onRunnerEnd(): void {
     this.ctrfReport.results.summary.stop = Date.now()
-    const fileName = this.getReportFileName(runner.specs[0])
-    this.writeReportToFile(this.ctrfReport, fileName)
+    this.write(JSON.stringify(this.ctrfReport, null, 2))
   }
 
-  private updateCtrfTotalsFromTestStats(testStats: TestStats): void {
+  private handleTestOrHookEnd(
+    stats: TestStats | HookStats,
+    status: TestStats['state'] | HookStats['state']
+  ): void {
+    this.updateCtrfTestResultsFromTestStats(stats, status)
+    this.updateCtrfTotalsFromTestStats(stats)
+  }
+
+  private updateCtrfTotalsFromTestStats(stats: TestStats | HookStats): void {
     this.ctrfReport.results.summary.tests += 1
 
-    switch (testStats.state) {
+    switch (stats.state) {
       case 'passed':
         this.ctrfReport.results.summary.passed += 1
         break
@@ -173,42 +145,27 @@ export default class GenerateCtrfReport extends WDIOReporter {
   }
 
   private updateCtrfTestResultsFromTestStats(
-    test: TestStats,
-    status: CtrfTestState
+    stats: TestStats | HookStats,
+    status: TestStats['state'] | HookStats['state']
   ): void {
     const ctrfTest: CtrfTest = {
-      name: test.title,
-      status,
-      duration: test._duration,
+      name: stats.title,
+      status: status ?? 'other',
+      duration: stats._duration,
     }
 
     if (this.reporterConfigOptions.minimal === false) {
-      const previousTest = this.previousReport?.results.tests.find(
-        (name) => name.name === test.title
-      )
-      ctrfTest.start = Math.floor(test.start.getTime() / 1000)
-      ctrfTest.stop = test.end ? Math.floor(test.end.getTime() / 1000) : 0
-      ctrfTest.message = this.extractFailureDetails(test).message
-      ctrfTest.trace = this.extractFailureDetails(test).trace
-      ctrfTest.rawStatus = test.state
+      ctrfTest.start = Math.floor(stats.start.getTime() / 1000)
+      ctrfTest.stop = stats.end ? Math.floor(stats.end.getTime() / 1000) : 0
+      ctrfTest.message = this.extractFailureDetails(stats).message
+      ctrfTest.trace = this.extractFailureDetails(stats).trace
+      ctrfTest.rawStatus = stats.state
       ctrfTest.type = this.reporterConfigOptions.testType ?? 'e2e'
-
-      if (previousTest) {
-        if (previousTest.status === 'failed') {
-          ctrfTest.retries = (previousTest.retries ?? 0) + 1
-        }
-      } else {
-        ctrfTest.retries = test.retries ?? 0
-      }
-
-      if (previousTest) {
-        if (previousTest.status === 'failed') {
-          ctrfTest.flaky = test.state === 'passed'
-        } else {
-          ctrfTest.flaky = false
-        }
-      } else {
-        ctrfTest.flaky = test.state === 'passed' && (test.retries ?? 0) > 0
+      if (stats.type === 'test') {
+        const testStats = stats as TestStats
+        ctrfTest.retries = testStats.retries ?? 0
+        ctrfTest.flaky =
+          testStats.state === 'passed' && (testStats.retries ?? 0) > 0
       }
       ctrfTest.suite = this.currentSuite
       ctrfTest.filePath = this.currentSpecFile
@@ -222,7 +179,7 @@ export default class GenerateCtrfReport extends WDIOReporter {
     return Object.keys(environment).length > 0
   }
 
-  extractFailureDetails(testResult: TestStats): Partial<CtrfTest> {
+  extractFailureDetails(testResult: TestStats | HookStats): Partial<CtrfTest> {
     if (testResult.state === 'failed' && testResult.error) {
       const failureDetails: Partial<CtrfTest> = {}
       if (testResult.error.message) {
@@ -234,19 +191,5 @@ export default class GenerateCtrfReport extends WDIOReporter {
       return failureDetails
     }
     return {}
-  }
-
-  private getReportPath(fileName: string): string {
-    return path.join(this.outputDir, fileName)
-  }
-
-  private writeReportToFile(data: CtrfReport, fileName: string): void {
-    const filePath = this.getReportPath(fileName)
-    const str = JSON.stringify(data, null, 2)
-    try {
-      fs.writeFileSync(filePath, str + '\n')
-    } catch (e) {
-      console.error(`CTRF: Error writing report ${String(e)}`)
-    }
   }
 }

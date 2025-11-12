@@ -12,6 +12,7 @@
   },
   "homepage": "https://ctrf.io",
   "main": "dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc && eslint . && prettier --write .",
     "test": "vitest",
@@ -32,7 +33,8 @@
   "author": "Matthew Thomas",
   "license": "MIT",
   "dependencies": {
-    "@wdio/reporter": "^8.41.0"
+    "@wdio/reporter": "^8.41.0",
+    "ctrf": "^0.0.12"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
