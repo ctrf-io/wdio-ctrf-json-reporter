@@ -29,8 +29,12 @@
     "reporter",
     "ctrf"
   ],
-  "author": "Matthew Thomas",
+  "author": "Matthew Poulton-White",
   "license": "MIT",
+  "security": {
+    "email": "security@ctrf.io",
+    "url": "https://github.com/ctrf-io/.github/blob/main/SECURITY.md"
+  },
   "dependencies": {
     "@wdio/reporter": "^8.41.0"
   },
