@@ -24,10 +24,16 @@
     "README.md"
   ],
   "keywords": [
-    "wdio-reporter",
+    "ctrf",
+    "common-test-report-format",
+    "test-reporting",
+    "test-results",
+    "testing",
+    "json",
+    "ci",
     "wdio",
-    "reporter",
-    "ctrf"
+    "wdio-reporter",
+    "webdriverio"
   ],
   "author": "Matthew Poulton-White",
   "license": "MIT",
