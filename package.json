@@ -13,24 +13,37 @@
   "homepage": "https://ctrf.io",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc && eslint . && prettier --write .",
+    "build": "tsc",
     "test": "vitest",
     "test:ci": "vitest --watch=false",
-    "lint": "eslint . && prettier --check .",
-    "all": "npm run build && npm run test:ci && npm run lint"
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint . --fix",
+    "lint:check": "eslint .",
+    "all": "npm run build && npm run test:ci && npm run lint:check && npm run format:check"
   },
   "files": [
     "dist/",
     "README.md"
   ],
   "keywords": [
-    "wdio-reporter",
+    "ctrf",
+    "common-test-report-format",
+    "test-reporting",
+    "test-results",
+    "testing",
+    "json",
+    "ci",
     "wdio",
-    "reporter",
-    "ctrf"
+    "wdio-reporter",
+    "webdriverio"
   ],
-  "author": "Matthew Thomas",
+  "author": "Matthew Poulton-White",
   "license": "MIT",
+  "security": {
+    "email": "security@ctrf.io",
+    "url": "https://github.com/ctrf-io/.github/blob/main/SECURITY.md"
+  },
   "dependencies": {
     "@wdio/reporter": "^8.41.0"
   },
