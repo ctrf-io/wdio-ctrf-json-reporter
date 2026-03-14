@@ -15,6 +15,32 @@ import * as path from 'path'
 import { fileURLToPath } from 'url'
 import * as crypto from 'crypto'
 
+/**
+ * Global key for the runtime function.
+ * Test code uses this to send metadata to the reporter.
+ */
+export const CTRF_RUNTIME_KEY = '__ctrfTestRuntime'
+
+/**
+ * Runtime message for extra data
+ */
+export interface CtrfRuntimeMessage {
+  type: 'extra'
+  data: Record<string, unknown>
+}
+
+/**
+ * Type for the runtime handler function
+ */
+export type CtrfRuntimeHandler = (message: CtrfRuntimeMessage) => void
+
+/**
+ * Internal metadata storage for tests (keyed by test title)
+ */
+interface TestMetadata {
+  extra: Record<string, unknown>
+}
+
 export interface CtrfReporterConfigOptions extends Partial<Reporters.Options> {
   minimal?: boolean
   testType?: string
@@ -36,6 +62,12 @@ export default class GenerateCtrfReport extends WDIOReporter {
   private currentSuite = ''
   private currentSpecFile = ''
   private currentBrowser = ''
+
+  /**
+   * Runtime metadata collection
+   */
+  private currentTestTitle: string | undefined
+  private testMetadata: Map<string, TestMetadata> = new Map()
 
   constructor(options: CtrfReporterConfigOptions = {}) {
     options = {
@@ -75,6 +107,95 @@ export default class GenerateCtrfReport extends WDIOReporter {
     if (!fs.existsSync(this.outputDir)) {
       fs.mkdirSync(this.outputDir, { recursive: true })
     }
+
+    // Register the runtime handler so test code can call ctrf.extra()
+    this.registerRuntimeHandler()
+  }
+
+  /**
+   * Register the global runtime handler for test code to send metadata
+   */
+  private registerRuntimeHandler(): void {
+    const handler: CtrfRuntimeHandler = (message) => {
+      this.handleRuntimeMessage(message)
+    }
+
+    // Set on global (WDIO runs in Node)
+    const g = typeof globalThis !== 'undefined' ? globalThis : (global as any)
+    g[CTRF_RUNTIME_KEY] = handler
+  }
+
+  /**
+   * Clear the global runtime handler
+   */
+  private clearRuntimeHandler(): void {
+    const g = typeof globalThis !== 'undefined' ? globalThis : (global as any)
+    delete g[CTRF_RUNTIME_KEY]
+  }
+
+  /**
+   * Handle runtime messages from test code
+   */
+  private handleRuntimeMessage(message: CtrfRuntimeMessage): void {
+    if (!this.currentTestTitle) {
+      // Outside test context - silently ignore
+      return
+    }
+
+    let metadata = this.testMetadata.get(this.currentTestTitle)
+    if (!metadata) {
+      metadata = { extra: {} }
+      this.testMetadata.set(this.currentTestTitle, metadata)
+    }
+
+    if (message.type === 'extra') {
+      // Deep merge extra data
+      metadata.extra = this.deepMerge(
+        metadata.extra as Record<string, unknown>,
+        message.data as Record<string, unknown>
+      )
+    }
+  }
+
+  /**
+   * Deep merge two objects following CTRF merge rules:
+   * - Arrays: concatenated
+   * - Objects: recursively merged
+   * - Primitives: overwritten
+   */
+  private deepMerge(
+    target: Record<string, unknown>,
+    source: Record<string, unknown>
+  ): Record<string, unknown> {
+    const result = { ...target }
+
+    for (const [key, sourceValue] of Object.entries(source)) {
+      const targetValue = result[key]
+
+      if (Array.isArray(sourceValue)) {
+        result[key] = Array.isArray(targetValue)
+          ? [...targetValue, ...sourceValue]
+          : [...sourceValue]
+      } else if (
+        sourceValue !== null &&
+        typeof sourceValue === 'object' &&
+        !Array.isArray(sourceValue)
+      ) {
+        result[key] =
+          targetValue !== null &&
+          typeof targetValue === 'object' &&
+          !Array.isArray(targetValue)
+            ? this.deepMerge(
+                targetValue as Record<string, unknown>,
+                sourceValue as Record<string, unknown>
+              )
+            : { ...sourceValue }
+      } else {
+        result[key] = sourceValue
+      }
+    }
+
+    return result
   }
 
   private previousReport?: CtrfReport
@@ -120,9 +241,22 @@ export default class GenerateCtrfReport extends WDIOReporter {
     }
   }
 
+  onTestStart(test: TestStats): void {
+    // Track current test for runtime metadata collection
+    this.currentTestTitle = test.title
+
+    // Initialize metadata storage for this test
+    if (!this.testMetadata.has(test.title)) {
+      this.testMetadata.set(test.title, { extra: {} })
+    }
+  }
+
   onTestEnd(testStats: TestStats): void {
     this.updateCtrfTestResultsFromTestStats(testStats, testStats.state)
     this.updateCtrfTotalsFromTestStats(testStats)
+
+    // Clear current test context
+    this.currentTestTitle = undefined
   }
 
   private getReportFileName(specFilePath: string): string {
@@ -154,6 +288,9 @@ export default class GenerateCtrfReport extends WDIOReporter {
     this.ctrfReport.results.summary.stop = Date.now()
     const fileName = this.getReportFileName(runner.specs[0])
     this.writeReportToFile(this.ctrfReport, fileName)
+
+    // Clear the global runtime handler
+    this.clearRuntimeHandler()
   }
 
   private updateCtrfTotalsFromTestStats(testStats: TestStats): void {
@@ -219,6 +356,12 @@ export default class GenerateCtrfReport extends WDIOReporter {
       ctrfTest.suite = this.currentSuite
       ctrfTest.filePath = this.currentSpecFile
       ctrfTest.browser = this.currentBrowser
+    }
+
+    // Add runtime metadata (extra) if present
+    const metadata = this.testMetadata.get(test.title)
+    if (metadata && Object.keys(metadata.extra).length > 0) {
+      ctrfTest.extra = metadata.extra as Record<string, any>
     }
 
     this.ctrfReport.results.tests.push(ctrfTest)
