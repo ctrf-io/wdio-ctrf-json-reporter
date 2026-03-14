@@ -13,6 +13,7 @@ import {
 import * as fs from 'fs'
 import * as path from 'path'
 import { fileURLToPath } from 'url'
+import * as crypto from 'crypto'
 
 export interface CtrfReporterConfigOptions extends Partial<Reporters.Options> {
   minimal?: boolean
@@ -48,6 +49,11 @@ export default class GenerateCtrfReport extends WDIOReporter {
     this.outputDir = options.outputDir ?? 'ctrf'
     this.reporterConfigOptions = options
     this.ctrfReport = {
+      reportFormat: 'CTRF',
+      specVersion: '0.0.0',
+      reportId: crypto.randomUUID(),
+      timestamp: new Date().toISOString(),
+      generatedBy: 'wdio-ctrf-json-reporter',
       results: {
         tool: {
           name: 'webdriverio',
