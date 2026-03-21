@@ -61,5 +61,7 @@ export function extra(data: Record<string, unknown>): void {
   sendMessage({ type: 'extra', data })
 }
 
+export const ctrf = { extra } as const
+
 // Re-export types for convenience
 export { CTRF_RUNTIME_KEY, type CtrfRuntimeHandler, type CtrfRuntimeMessage }
