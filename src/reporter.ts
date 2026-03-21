@@ -5,15 +5,29 @@ import WDIOReporter, {
 } from '@wdio/reporter'
 import { type Reporters } from '@wdio/types'
 import {
-  type CtrfTest,
-  type CtrfEnvironment,
-  type CtrfReport,
-  type CtrfTestState,
-} from './types/ctrf'
+  type CTRFReport,
+  type Test as CtrfTestBase,
+  type TestStatus,
+  type Environment,
+  type Results,
+} from 'ctrf'
 import * as fs from 'fs'
 import * as path from 'path'
 import { fileURLToPath } from 'url'
 import * as crypto from 'crypto'
+
+// Local overrides to keep backward-compatible string suite (canonical is string[])
+// TODO(v1): align suite to string[] and remove this override
+type WdioTest = Omit<CtrfTestBase, 'suite'> & { suite?: string | string[] }
+// TODO(v1): align buildNumber to number and remove this override
+type WdioEnvironment = Omit<Environment, 'buildNumber'> & {
+  buildNumber?: string | number
+}
+type WdioResults = Omit<Results, 'tests' | 'environment'> & {
+  tests: WdioTest[]
+  environment?: WdioEnvironment
+}
+type WdioCTRFReport = Omit<CTRFReport, 'results'> & { results: WdioResults }
 
 /**
  * Global key for the runtime function.
@@ -55,7 +69,7 @@ export interface CtrfReporterConfigOptions extends Partial<Reporters.Options> {
 }
 
 export default class GenerateCtrfReport extends WDIOReporter {
-  readonly ctrfReport: CtrfReport
+  readonly ctrfReport: WdioCTRFReport
   private readonly reporterConfigOptions: CtrfReporterConfigOptions
 
   private readonly outputDir: string
@@ -198,7 +212,7 @@ export default class GenerateCtrfReport extends WDIOReporter {
     return result
   }
 
-  private previousReport?: CtrfReport
+  private previousReport?: WdioCTRFReport
 
   onSuiteStart(suite: SuiteStats): void {
     this.currentSuite = suite.fullTitle
@@ -223,7 +237,7 @@ export default class GenerateCtrfReport extends WDIOReporter {
       buildName: this.reporterConfigOptions.buildName,
       buildNumber: this.reporterConfigOptions.buildNumber,
       buildUrl: this.reporterConfigOptions.buildUrl,
-      extra: caps,
+      extra: caps as Record<string, unknown>,
     }
 
     const oldCtfFilePath = path.join(
@@ -234,7 +248,7 @@ export default class GenerateCtrfReport extends WDIOReporter {
       try {
         this.previousReport = JSON.parse(
           fs.readFileSync(oldCtfFilePath, 'utf8')
-        ) as CtrfReport
+        ) as WdioCTRFReport
       } catch (e) {
         console.error(`CTRF: Error reading previous report ${String(e)}`)
       }
@@ -317,9 +331,9 @@ export default class GenerateCtrfReport extends WDIOReporter {
 
   private updateCtrfTestResultsFromTestStats(
     test: TestStats,
-    status: CtrfTestState
+    status: TestStatus
   ): void {
-    const ctrfTest: CtrfTest = {
+    const ctrfTest: WdioTest = {
       name: test.title,
       status,
       duration: test._duration,
@@ -367,13 +381,13 @@ export default class GenerateCtrfReport extends WDIOReporter {
     this.ctrfReport.results.tests.push(ctrfTest)
   }
 
-  hasEnvironmentDetails(environment: CtrfEnvironment): boolean {
+  hasEnvironmentDetails(environment: WdioEnvironment): boolean {
     return Object.keys(environment).length > 0
   }
 
-  extractFailureDetails(testResult: TestStats): Partial<CtrfTest> {
+  extractFailureDetails(testResult: TestStats): Partial<WdioTest> {
     if (testResult.state === 'failed' && testResult.error) {
-      const failureDetails: Partial<CtrfTest> = {}
+      const failureDetails: Partial<WdioTest> = {}
       if (testResult.error.message) {
         failureDetails.message = testResult.error.message
       }
@@ -389,7 +403,7 @@ export default class GenerateCtrfReport extends WDIOReporter {
     return path.join(this.outputDir, fileName)
   }
 
-  private writeReportToFile(data: CtrfReport, fileName: string): void {
+  private writeReportToFile(data: WdioCTRFReport, fileName: string): void {
     const filePath = this.getReportPath(fileName)
     const str = JSON.stringify(data, null, 2)
     try {
