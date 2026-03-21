@@ -4,4 +4,4 @@ export {
   type CtrfRuntimeHandler,
   type CtrfRuntimeMessage,
 } from './reporter'
-export { extra } from './runtime'
+export { ctrf, extra } from './runtime'
