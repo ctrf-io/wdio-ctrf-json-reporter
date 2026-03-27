@@ -56,7 +56,7 @@
     "url": "https://github.com/ctrf-io/.github/blob/main/SECURITY.md"
   },
   "dependencies": {
-    "@wdio/reporter": "^8.41.0",
+    "@wdio/reporter": "^9.26.1",
     "ctrf": "^0.2.0"
   },
   "devDependencies": {
