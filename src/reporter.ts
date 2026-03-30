@@ -2,6 +2,7 @@ import WDIOReporter, {
   type SuiteStats,
   type RunnerStats,
   type TestStats,
+  type HookStats,
 } from '@wdio/reporter'
 import { type Reporters } from '@wdio/types'
 import {
@@ -255,6 +256,13 @@ export default class GenerateCtrfReport extends WDIOReporter {
     }
   }
 
+  onHookEnd(stats: HookStats): void {
+    if (stats.error) {
+      this.updateCtrfTestResultsFromHookStats(stats)
+      this.updateCtrfTotalsFromTestStats(stats)
+    }
+  }
+
   onTestStart(test: TestStats): void {
     // Track current test for runtime metadata collection
     this.currentTestTitle = test.title
@@ -307,7 +315,9 @@ export default class GenerateCtrfReport extends WDIOReporter {
     this.clearRuntimeHandler()
   }
 
-  private updateCtrfTotalsFromTestStats(testStats: TestStats): void {
+  private updateCtrfTotalsFromTestStats(
+    testStats: TestStats | HookStats
+  ): void {
     this.ctrfReport.results.summary.tests += 1
 
     switch (testStats.state) {
@@ -381,11 +391,32 @@ export default class GenerateCtrfReport extends WDIOReporter {
     this.ctrfReport.results.tests.push(ctrfTest)
   }
 
+  private updateCtrfTestResultsFromHookStats(stats: HookStats): void {
+    const ctrfTest: WdioTest = {
+      name: stats.title,
+      status: stats.state ?? 'other',
+      duration: stats._duration,
+    }
+
+    if (this.reporterConfigOptions.minimal === false) {
+      ctrfTest.start = Math.floor(stats.start.getTime() / 1000)
+      ctrfTest.stop = stats.end ? Math.floor(stats.end.getTime() / 1000) : 0
+      ctrfTest.message = this.extractFailureDetails(stats).message
+      ctrfTest.trace = this.extractFailureDetails(stats).trace
+      ctrfTest.rawStatus = stats.state
+      ctrfTest.suite = this.currentSuite
+      ctrfTest.filePath = this.currentSpecFile
+      ctrfTest.browser = this.currentBrowser
+    }
+
+    this.ctrfReport.results.tests.push(ctrfTest)
+  }
+
   hasEnvironmentDetails(environment: WdioEnvironment): boolean {
     return Object.keys(environment).length > 0
   }
 
-  extractFailureDetails(testResult: TestStats): Partial<WdioTest> {
+  extractFailureDetails(testResult: TestStats | HookStats): Partial<WdioTest> {
     if (testResult.state === 'failed' && testResult.error) {
       const failureDetails: Partial<WdioTest> = {}
       if (testResult.error.message) {

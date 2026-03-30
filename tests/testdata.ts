@@ -126,4 +126,60 @@ export const SUITES = {
       },
     ],
   },
+  suite_with_failed_hook: {
+    uid: 'suite_with_failed_hook_id',
+    fullTitle: 'suite_with_failed_hook_fullTitle',
+    file: '/tests/sample/suite_with_failed_hook.e2e.js',
+    hooks: [
+      {
+        uid: 'hook1',
+        title: '"before each" hook for "s6t1 - should run"',
+        start,
+        state: 'failed',
+        type: 'hook',
+        _duration: 12,
+        error: {
+          name: 'Error',
+          message: 'Hook setup failed',
+          stack: 'Error: Hook setup failed\n    at Context.<anonymous>',
+          type: 'Error',
+          expected: undefined,
+          actual: undefined,
+        },
+      },
+    ],
+    tests: [
+      {
+        uid: 's6t1',
+        title: 's6t1 - should run',
+        start,
+        state: 'passed',
+        type: 'test',
+      },
+    ],
+  },
+  suite_with_passing_hook: {
+    uid: 'suite_with_passing_hook_id',
+    fullTitle: 'suite_with_passing_hook_fullTitle',
+    file: '/tests/sample/suite_with_passing_hook.e2e.js',
+    hooks: [
+      {
+        uid: 'hook2',
+        title: '"before each" hook for "s7t1 - should run"',
+        start,
+        state: 'passed',
+        type: 'hook',
+        _duration: 5,
+      },
+    ],
+    tests: [
+      {
+        uid: 's7t1',
+        title: 's7t1 - should run',
+        start,
+        state: 'passed',
+        type: 'test',
+      },
+    ],
+  },
 }
