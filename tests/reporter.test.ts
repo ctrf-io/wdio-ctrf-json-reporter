@@ -481,6 +481,62 @@ describe('Reporter output', () => {
   })
 })
 
+describe('Hook error handling', () => {
+  test('failed hook is reported as a failed test', () => {
+    const suite = SUITES.suite_with_failed_hook
+    tmpReporter = new GenerateCtrfReport(mockOptions)
+    tmpReporter.onRunnerStart(getRunnerForSuite(suite))
+    tmpReporter.onSuiteStart(suite as any)
+    tmpReporter.onHookEnd(suite.hooks[0] as any)
+    tmpReporter.onTestStart(suite.tests[0] as any)
+    tmpReporter.onTestEnd(suite.tests[0] as any)
+    tmpReporter.onSuiteEnd(suite as any)
+    tmpReporter.onRunnerEnd(getRunnerForSuite(suite))
+
+    expect(tmpReporter.ctrfReport.results.summary).toMatchObject({
+      tests: 2,
+      failed: 1,
+      passed: 1,
+    })
+
+    expect(tmpReporter.ctrfReport.results.tests[0]).toMatchObject({
+      name: suite.hooks[0].title,
+      status: 'failed',
+      duration: 12,
+      message: 'Hook setup failed',
+      trace: 'Error: Hook setup failed\n    at Context.<anonymous>',
+      rawStatus: 'failed',
+      suite: suite.fullTitle,
+      filePath: suite.file,
+      browser: 'chrome',
+    })
+  })
+
+  test('passing hook is not reported', () => {
+    const suite = SUITES.suite_with_passing_hook
+    tmpReporter = new GenerateCtrfReport(mockOptions)
+    tmpReporter.onRunnerStart(getRunnerForSuite(suite))
+    tmpReporter.onSuiteStart(suite as any)
+    tmpReporter.onHookEnd(suite.hooks[0] as any)
+    tmpReporter.onTestStart(suite.tests[0] as any)
+    tmpReporter.onTestEnd(suite.tests[0] as any)
+    tmpReporter.onSuiteEnd(suite as any)
+    tmpReporter.onRunnerEnd(getRunnerForSuite(suite))
+
+    expect(tmpReporter.ctrfReport.results.summary).toMatchObject({
+      tests: 1,
+      passed: 1,
+      failed: 0,
+    })
+
+    expect(tmpReporter.ctrfReport.results.tests).toHaveLength(1)
+    expect(tmpReporter.ctrfReport.results.tests[0]).toMatchObject({
+      name: suite.tests[0].title,
+      status: 'passed',
+    })
+  })
+})
+
 describe('Reporter params', () => {
   test('all params + capabilities', () => {
     const suite = SUITES.suite_2passed
