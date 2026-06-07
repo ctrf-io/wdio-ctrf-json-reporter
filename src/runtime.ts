@@ -25,19 +25,19 @@
  */
 
 import {
-  CTRF_RUNTIME_KEY,
-  type CtrfRuntimeHandler,
-  type CtrfRuntimeMessage,
-} from './reporter'
+	CTRF_RUNTIME_KEY,
+	type CtrfRuntimeHandler,
+	type CtrfRuntimeMessage,
+} from "./reporter";
 
 /**
  * Get the runtime handler from global context.
  * Returns undefined if not in a test context.
  */
 function getRuntime(): CtrfRuntimeHandler | undefined {
-  // Check both globalThis (ESM) and global (CJS/WDIO)
-  const g = typeof globalThis !== 'undefined' ? globalThis : (global as any)
-  return g[CTRF_RUNTIME_KEY]
+	return (globalThis as Record<string, unknown>)[CTRF_RUNTIME_KEY] as
+		| CtrfRuntimeHandler
+		| undefined;
 }
 
 /**
@@ -45,10 +45,10 @@ function getRuntime(): CtrfRuntimeHandler | undefined {
  * Silently no-ops if outside test context.
  */
 function sendMessage(message: CtrfRuntimeMessage): void {
-  const runtime = getRuntime()
-  if (runtime) {
-    runtime(message)
-  }
+	const runtime = getRuntime();
+	if (runtime) {
+		runtime(message);
+	}
 }
 
 /**
@@ -58,10 +58,10 @@ function sendMessage(message: CtrfRuntimeMessage): void {
  * @param data - An object containing metadata to attach
  */
 export function extra(data: Record<string, unknown>): void {
-  sendMessage({ type: 'extra', data })
+	sendMessage({ type: "extra", data });
 }
 
-export const ctrf = { extra } as const
+export const ctrf = { extra } as const;
 
 // Re-export types for convenience
-export { CTRF_RUNTIME_KEY, type CtrfRuntimeHandler, type CtrfRuntimeMessage }
+export { CTRF_RUNTIME_KEY, type CtrfRuntimeHandler, type CtrfRuntimeMessage };

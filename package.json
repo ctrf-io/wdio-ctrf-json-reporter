@@ -1,73 +1,70 @@
 {
-  "name": "wdio-ctrf-json-reporter",
-  "version": "0.0.17",
-  "description": "A WebriverIO JSON test reporter to create test results reports",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ctrf-io/wdio-ctrf-json-reporter.git"
-  },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
-  },
-  "homepage": "https://ctrf.io",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./runtime": {
-      "types": "./dist/runtime.d.ts",
-      "default": "./dist/runtime.js"
-    }
-  },
-  "scripts": {
-    "build": "tsc",
-    "test": "vitest",
-    "test:ci": "vitest --watch=false",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "lint": "eslint . --fix",
-    "lint:check": "eslint .",
-    "all": "npm run build && npm run test:ci && npm run lint:check && npm run format:check"
-  },
-  "files": [
-    "dist/",
-    "README.md"
-  ],
-  "keywords": [
-    "ctrf",
-    "common-test-report-format",
-    "test-reporting",
-    "test-results",
-    "testing",
-    "json",
-    "ci",
-    "wdio",
-    "wdio-reporter",
-    "webdriverio"
-  ],
-  "author": "Matthew Poulton-White",
-  "license": "MIT",
-  "security": {
-    "email": "security@ctrf.io",
-    "url": "https://github.com/ctrf-io/.github/blob/main/SECURITY.md"
-  },
-  "dependencies": {
-    "@wdio/reporter": "^8.41.0",
-    "ctrf": "^0.2.0"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.39.2",
-    "eslint": "^10.0.2",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.5",
-    "prettier": "^3.8.1",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.55.0",
-    "vitest": "^4.0.18",
-    "vitest-ctrf-json-reporter": "^0.0.3"
-  }
+	"name": "wdio-ctrf-json-reporter",
+	"version": "0.0.17",
+	"description": "A WebriverIO JSON test reporter to create test results reports",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ctrf-io/wdio-ctrf-json-reporter.git"
+	},
+	"publishConfig": {
+		"access": "public",
+		"provenance": true
+	},
+	"homepage": "https://ctrf.io",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		},
+		"./runtime": {
+			"types": "./dist/runtime.d.ts",
+			"default": "./dist/runtime.js"
+		}
+	},
+	"scripts": {
+		"build": "tsc",
+		"test": "vitest",
+		"test:ci": "vitest --watch=false",
+		"format": "biome format --write .",
+		"format:check": "biome format .",
+		"lint": "biome lint --write . --unsafe",
+		"lint:check": "biome lint .",
+		"all": "npm run build && npm run test:ci && npm run lint:check && npm run format:check && npm run check",
+		"check": "biome check ."
+	},
+	"files": [
+		"dist/",
+		"README.md"
+	],
+	"keywords": [
+		"ctrf",
+		"common-test-report-format",
+		"test-reporting",
+		"test-results",
+		"testing",
+		"json",
+		"ci",
+		"wdio",
+		"wdio-reporter",
+		"webdriverio"
+	],
+	"author": "Matthew Poulton-White",
+	"license": "MIT",
+	"security": {
+		"email": "security@ctrf.io",
+		"url": "https://github.com/ctrf-io/.github/blob/main/SECURITY.md"
+	},
+	"dependencies": {
+		"@wdio/reporter": "9.27.2",
+		"ctrf": "0.2.1"
+	},
+	"devDependencies": {
+		"@types/node": "24.10.1",
+		"@biomejs/biome": "2.4.16",
+		"typescript": "6.0.3",
+		"vitest": "4.1.8",
+		"vitest-ctrf-json-reporter": "0.0.3"
+	}
 }
