@@ -134,17 +134,15 @@ export default class GenerateCtrfReport extends WDIOReporter {
 			this.handleRuntimeMessage(message);
 		};
 
-		// Set on global (WDIO runs in Node)
-		const g = typeof globalThis !== "undefined" ? globalThis : (global as any);
-		g[CTRF_RUNTIME_KEY] = handler;
+		// Set on globalThis (WDIO runs in Node)
+		(globalThis as Record<string, unknown>)[CTRF_RUNTIME_KEY] = handler;
 	}
 
 	/**
 	 * Clear the global runtime handler
 	 */
 	private clearRuntimeHandler(): void {
-		const g = typeof globalThis !== "undefined" ? globalThis : (global as any);
-		delete g[CTRF_RUNTIME_KEY];
+		delete (globalThis as Record<string, unknown>)[CTRF_RUNTIME_KEY];
 	}
 
 	/**

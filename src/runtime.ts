@@ -35,9 +35,9 @@ import {
  * Returns undefined if not in a test context.
  */
 function getRuntime(): CtrfRuntimeHandler | undefined {
-	// Check both globalThis (ESM) and global (CJS/WDIO)
-	const g = typeof globalThis !== "undefined" ? globalThis : (global as any);
-	return g[CTRF_RUNTIME_KEY];
+	return (globalThis as Record<string, unknown>)[CTRF_RUNTIME_KEY] as
+		| CtrfRuntimeHandler
+		| undefined;
 }
 
 /**

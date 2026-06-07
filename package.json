@@ -57,12 +57,13 @@
 		"url": "https://github.com/ctrf-io/.github/blob/main/SECURITY.md"
 	},
 	"dependencies": {
-		"@wdio/reporter": "8.43.0",
+		"@wdio/reporter": "9.27.2",
 		"ctrf": "0.2.1"
 	},
 	"devDependencies": {
+		"@types/node": "24.10.1",
 		"@biomejs/biome": "2.4.16",
-		"typescript": "5.9.3",
+		"typescript": "6.0.3",
 		"vitest": "4.1.8",
 		"vitest-ctrf-json-reporter": "0.0.3"
 	}
