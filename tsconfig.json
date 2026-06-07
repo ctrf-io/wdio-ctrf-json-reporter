@@ -1,13 +1,13 @@
 {
-  "compilerOptions": {
-    "target": "es6",
-    "module": "commonjs",
-    "strict": true,
-    "outDir": "./dist",
-    "declaration": true,
-    "skipLibCheck": true,
-    "rootDir": "./src",
-    "sourceMap": true
-  },
-  "include": ["src/**/*.ts"]
+	"compilerOptions": {
+		"target": "es6",
+		"module": "commonjs",
+		"strict": true,
+		"outDir": "./dist",
+		"declaration": true,
+		"skipLibCheck": true,
+		"rootDir": "./src",
+		"sourceMap": true
+	},
+	"include": ["src/**/*.ts"]
 }
