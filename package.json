@@ -25,13 +25,14 @@
 	},
 	"scripts": {
 		"build": "tsc",
-		"test": "vitest",
-		"test:ci": "vitest --watch=false",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"test:ci": "vitest run",
 		"format": "biome format --write .",
 		"format:check": "biome format .",
 		"lint": "biome lint --write . --unsafe",
 		"lint:check": "biome lint .",
-		"all": "npm run build && npm run test:ci && npm run lint:check && npm run format:check && npm run check",
+		"all": "npm run lint:check && npm run format:check && npm run test && npm run build",
 		"check": "biome check ."
 	},
 	"files": [
