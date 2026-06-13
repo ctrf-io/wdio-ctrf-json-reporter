@@ -1,8 +1,5 @@
-import WDIOReporter, {
-	type SuiteStats,
-	type RunnerStats,
-	type TestStats,
-} from "@wdio/reporter";
+import type WDIOReporterType from "@wdio/reporter";
+import type { SuiteStats, RunnerStats, TestStats } from "@wdio/reporter";
 import { type Reporters } from "@wdio/types";
 import {
 	type CTRFReport,
@@ -13,8 +10,14 @@ import {
 } from "ctrf";
 import * as fs from "fs";
 import * as path from "path";
+import { createRequire } from "node:module";
 import { fileURLToPath } from "url";
 import * as crypto from "crypto";
+
+const require = createRequire(import.meta.url);
+const WDIOReporter = (
+	require("@wdio/reporter") as typeof import("@wdio/reporter")
+).default as typeof WDIOReporterType;
 
 // Local overrides to keep backward-compatible string suite (canonical is string[])
 // TODO(v1): align suite to string[] and remove this override

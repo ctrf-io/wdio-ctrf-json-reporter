@@ -11,28 +11,35 @@
 		"provenance": true
 	},
 	"homepage": "https://ctrf.io",
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
+	"type": "module",
+	"main": "./dist/index.cjs",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
-			"default": "./dist/index.js"
+			"import": "./dist/index.js",
+			"require": "./dist/index.cjs"
 		},
 		"./runtime": {
 			"types": "./dist/runtime.d.ts",
-			"default": "./dist/runtime.js"
+			"import": "./dist/runtime.js",
+			"require": "./dist/runtime.cjs"
 		}
 	},
 	"scripts": {
-		"build": "tsc",
-		"test": "vitest run",
+		"build": "tsup && node scripts/write-cjs-shims.mjs",
+		"build:check": "tsc -p . --noEmit",
+		"build:watch": "tsup --watch",
+		"clean": "rm -rf dist && rm -rf coverage && rm -rf ctrf",
+		"test": "npm run build && vitest run",
 		"test:watch": "vitest",
 		"test:ci": "vitest run",
 		"format": "biome format --write .",
 		"format:check": "biome format .",
 		"lint": "biome lint --write . --unsafe",
 		"lint:check": "biome lint .",
-		"all": "npm run lint:check && npm run format:check && npm run test && npm run build",
+		"all": "npm run build:check && npm run lint:check && npm run format:check && npm run test && npm run build",
 		"check": "biome check ."
 	},
 	"files": [
@@ -62,8 +69,9 @@
 		"ctrf": "0.2.1"
 	},
 	"devDependencies": {
-		"@types/node": "24.10.1",
 		"@biomejs/biome": "2.4.16",
+		"@types/node": "24.10.1",
+		"tsup": "8.5.1",
 		"typescript": "6.0.3",
 		"vitest": "4.1.8",
 		"vitest-ctrf-json-reporter": "0.0.3"
