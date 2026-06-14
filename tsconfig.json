@@ -1,15 +1,28 @@
 {
 	"compilerOptions": {
-		"target": "es2017",
-		"lib": ["es2017"],
-		"module": "commonjs",
+		"target": "ES2023",
+		"lib": ["ES2023"],
+		"module": "ESNext",
+		"moduleResolution": "bundler",
 		"strict": true,
+		"esModuleInterop": true,
+		"allowSyntheticDefaultImports": true,
 		"types": ["node"],
 		"outDir": "./dist",
 		"declaration": true,
-		"skipLibCheck": true,
+		"declarationDir": "./dist",
+		"forceConsistentCasingInFileNames": true,
 		"rootDir": "./src",
-		"sourceMap": true
+		"ignoreDeprecations": "6.0"
 	},
-	"include": ["src/**/*.ts"]
+	"include": ["src/**/*"],
+	"exclude": [
+		"tests/**/*",
+		"dist/**/*",
+		"node_modules/**/*",
+		"coverage/**/*",
+		"ctrf/**/*",
+		"vitest.config.ts",
+		"vitest.config.mts"
+	]
 }
