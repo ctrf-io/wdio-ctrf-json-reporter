@@ -2,6 +2,8 @@
 
 > Save Webdriverio test results as a JSON file
 
+![CTRF 0.1.0](https://img.shields.io/badge/0.1.0-red?label=ctrf&labelColor=green)
+
 A WDIO JSON test reporter to create test reports that follow the CTRF standard.
 
 CTRF is a JSON test report standard with a seamless developer tool integration
@@ -52,7 +54,7 @@ By standardizing test results, reports can be validated, merged, compared, and a
     "environment": {
       "appName": "MyApp",
       "buildName": "MyBuild",
-      "buildNumber": "1"
+      "buildNumber": 1
     }
   }
 }
@@ -95,7 +97,7 @@ reporters: [
         osRelease: '18.04',             // Optional: Specify the OS release version.
         osVersion: '5.4.0',             // Optional: Specify the OS version.
         buildName: 'MyApp Build',       // Optional: Specify the build name.
-        buildNumber: '100',             // Optional: Specify the build number.
+        buildNumber: 100,               // Optional: Specify the build number.
     }]
   ],
 ```
