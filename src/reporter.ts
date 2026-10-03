@@ -2,11 +2,11 @@ import type WDIOReporterType from "@wdio/reporter";
 import type { SuiteStats, RunnerStats, TestStats } from "@wdio/reporter";
 import { type Reporters } from "@wdio/types";
 import {
+	CURRENT_SPEC_VERSION,
 	type CTRFReport,
-	type Test as CtrfTestBase,
+	type Test as CtrfTest,
 	type TestStatus,
 	type Environment,
-	type Results,
 } from "ctrf";
 import * as fs from "fs";
 import * as path from "path";
@@ -18,19 +18,6 @@ const require = createRequire(import.meta.url);
 const WDIOReporter = (
 	require("@wdio/reporter") as typeof import("@wdio/reporter")
 ).default as typeof WDIOReporterType;
-
-// Local overrides to keep backward-compatible string suite (canonical is string[])
-// TODO(v1): align suite to string[] and remove this override
-type WdioTest = Omit<CtrfTestBase, "suite"> & { suite?: string | string[] };
-// TODO(v1): align buildNumber to number and remove this override
-type WdioEnvironment = Omit<Environment, "buildNumber"> & {
-	buildNumber?: string | number;
-};
-type WdioResults = Omit<Results, "tests" | "environment"> & {
-	tests: WdioTest[];
-	environment?: WdioEnvironment;
-};
-type WdioCTRFReport = Omit<CTRFReport, "results"> & { results: WdioResults };
 
 /**
  * Global key for the runtime function.
@@ -67,12 +54,12 @@ export interface CtrfReporterConfigOptions extends Partial<Reporters.Options> {
 	osRelease?: string;
 	osVersion?: string;
 	buildName?: string;
-	buildNumber?: string;
+	buildNumber?: number;
 	buildUrl?: string;
 }
 
 export default class GenerateCtrfReport extends WDIOReporter {
-	readonly ctrfReport: WdioCTRFReport;
+	readonly ctrfReport: CTRFReport;
 	private readonly reporterConfigOptions: CtrfReporterConfigOptions;
 
 	private readonly outputDir: string;
@@ -99,7 +86,7 @@ export default class GenerateCtrfReport extends WDIOReporter {
 		this.reporterConfigOptions = options;
 		this.ctrfReport = {
 			reportFormat: "CTRF",
-			specVersion: "0.0.0",
+			specVersion: CURRENT_SPEC_VERSION,
 			reportId: crypto.randomUUID(),
 			timestamp: new Date().toISOString(),
 			generatedBy: "wdio-ctrf-json-reporter",
@@ -213,7 +200,7 @@ export default class GenerateCtrfReport extends WDIOReporter {
 		return result;
 	}
 
-	private previousReport?: WdioCTRFReport;
+	private previousReport?: CTRFReport;
 
 	onSuiteStart(suite: SuiteStats): void {
 		this.currentSuite = suite.fullTitle;
@@ -249,7 +236,7 @@ export default class GenerateCtrfReport extends WDIOReporter {
 			try {
 				this.previousReport = JSON.parse(
 					fs.readFileSync(oldCtfFilePath, "utf8"),
-				) as WdioCTRFReport;
+				) as CTRFReport;
 			} catch (e) {
 				console.error(`CTRF: Error reading previous report ${String(e)}`);
 			}
@@ -334,29 +321,48 @@ export default class GenerateCtrfReport extends WDIOReporter {
 		test: TestStats,
 		status: TestStatus,
 	): void {
-		const ctrfTest: WdioTest = {
+		const ctrfTest: CtrfTest = {
 			name: test.title,
 			status,
-			duration: test._duration,
+			duration: Math.max(0, Math.round(test._duration ?? 0)),
 		};
 
 		if (this.reporterConfigOptions.minimal === false) {
 			const previousTest = this.previousReport?.results.tests.find(
 				(name) => name.name === test.title,
 			);
-			ctrfTest.start = Math.floor(test.start.getTime() / 1000);
-			ctrfTest.stop = test.end ? Math.floor(test.end.getTime() / 1000) : 0;
+			ctrfTest.start = test.start.getTime();
+			if (test.end) {
+				ctrfTest.stop = test.end.getTime();
+			}
 			ctrfTest.message = this.extractFailureDetails(test).message;
 			ctrfTest.trace = this.extractFailureDetails(test).trace;
 			ctrfTest.rawStatus = test.state;
 			ctrfTest.type = this.reporterConfigOptions.testType ?? "e2e";
 
-			if (previousTest) {
-				if (previousTest.status === "failed") {
-					ctrfTest.retries = (previousTest.retries ?? 0) + 1;
-				}
+			const frameworkRetries = Math.max(0, test.retries ?? 0);
+			if (previousTest?.status === "failed") {
+				ctrfTest.retryAttempts = [
+					...(previousTest.retryAttempts ?? []),
+					{
+						attempt: (previousTest.retryAttempts?.length ?? 0) + 1,
+						status: previousTest.status,
+						duration: previousTest.duration,
+						message: previousTest.message,
+						trace: previousTest.trace,
+						start: previousTest.start,
+						stop: previousTest.stop,
+					},
+				];
+				ctrfTest.retries = ctrfTest.retryAttempts.length;
 			} else {
-				ctrfTest.retries = test.retries ?? 0;
+				ctrfTest.retries = frameworkRetries;
+				if (frameworkRetries > 0) {
+					ctrfTest.retryAttempts = Array.from(
+						{ length: frameworkRetries },
+						(_, index) => ({ attempt: index + 1, status: "failed" }),
+					);
+				}
 			}
 
 			if (previousTest) {
@@ -368,7 +374,7 @@ export default class GenerateCtrfReport extends WDIOReporter {
 			} else {
 				ctrfTest.flaky = test.state === "passed" && (test.retries ?? 0) > 0;
 			}
-			ctrfTest.suite = this.currentSuite;
+			ctrfTest.suite = [this.currentSuite];
 			ctrfTest.filePath = this.currentSpecFile;
 			ctrfTest.browser = this.currentBrowser;
 		}
@@ -382,13 +388,13 @@ export default class GenerateCtrfReport extends WDIOReporter {
 		this.ctrfReport.results.tests.push(ctrfTest);
 	}
 
-	hasEnvironmentDetails(environment: WdioEnvironment): boolean {
+	hasEnvironmentDetails(environment: Environment): boolean {
 		return Object.keys(environment).length > 0;
 	}
 
-	extractFailureDetails(testResult: TestStats): Partial<WdioTest> {
+	extractFailureDetails(testResult: TestStats): Partial<CtrfTest> {
 		if (testResult.state === "failed" && testResult.error) {
-			const failureDetails: Partial<WdioTest> = {};
+			const failureDetails: Partial<CtrfTest> = {};
 			if (testResult.error.message) {
 				failureDetails.message = testResult.error.message;
 			}
@@ -404,7 +410,7 @@ export default class GenerateCtrfReport extends WDIOReporter {
 		return path.join(this.outputDir, fileName);
 	}
 
-	private writeReportToFile(data: WdioCTRFReport, fileName: string): void {
+	private writeReportToFile(data: CTRFReport, fileName: string): void {
 		const filePath = this.getReportPath(fileName);
 		const str = JSON.stringify(data, null, 2);
 		try {
