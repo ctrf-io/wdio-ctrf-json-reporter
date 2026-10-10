@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { identityValue, runIdentity, testIdentity } from "../src/identity";
+import { identityValue, testIdentity } from "../src/identity";
 
 describe("identity semantics", () => {
 	it("normalizes paths but preserves suite component boundaries", () => {
@@ -18,9 +18,17 @@ describe("identity semantics", () => {
 			testIdentity("runner", { ...a, filePath: "tests/other.ts" }),
 		);
 	});
-	it("shares configured run identity and creates independent standalone runs", () => {
-		expect(runIdentity("coordinated-run")).toBe("coordinated-run");
-		expect(runIdentity()).not.toBe(runIdentity());
+	it("includes only explicitly supplied run identity", () => {
+		for (const runId of [undefined, "", "coordinated-run"]) {
+			const reporter = new Reporter({
+				runId,
+				stdout: true,
+				writeStream: process.stdout,
+			});
+			expect(JSON.parse(JSON.stringify(reporter.ctrfReport)).runId).toBe(
+				runId || undefined,
+			);
+		}
 		expect(() => identityValue(" ", "shardId")).toThrow();
 	});
 	it("supports an explicit case resolver without allowing empty identity", () => {
@@ -54,7 +62,7 @@ describe("worker and retry identity", () => {
 		);
 		try {
 			const spec = path.join(directory, "case.ts");
-			const make = (runId: string, cid = "0-0") => {
+			const make = (runId?: string, cid = "0-0") => {
 				const reporter = new Reporter({
 					outputDir: directory,
 					runId,
@@ -110,6 +118,11 @@ describe("worker and retry identity", () => {
 			const unrelated = make("another-run").execute(1, "passed");
 			expect(unrelated.executionId).not.toBe(first.executionId);
 			expect(unrelated.retries).toBe(0);
+			const unknown = make();
+			const unknownFirst = unknown.execute(0, "failed");
+			const unknownRetry = unknown.execute(1, "passed");
+			expect(unknownRetry.executionId).not.toBe(unknownFirst.executionId);
+			expect(unknownRetry.retries).toBe(0);
 			make("coordinated", "0-1").execute(0, "passed");
 			expect(
 				fs.readdirSync(directory).filter((name) => name.endsWith(".json")),

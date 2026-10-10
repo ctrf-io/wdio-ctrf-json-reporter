@@ -1,9 +1,4 @@
-import {
-	identityValue,
-	runIdentity,
-	testIdentity,
-	type IdentityOptions,
-} from "./identity";
+import { identityValue, testIdentity, type IdentityOptions } from "./identity";
 import type WDIOReporterType from "@wdio/reporter";
 import type { SuiteStats, RunnerStats, TestStats } from "@wdio/reporter";
 import { type Reporters } from "@wdio/types";
@@ -94,7 +89,7 @@ export default class GenerateCtrfReport extends WDIOReporter {
 		this.reporterConfigOptions = options;
 		this.ctrfReport = {
 			reportFormat: "CTRF",
-			runId: runIdentity(options.runId),
+			runId: options.runId || undefined,
 			specVersion: CURRENT_SPEC_VERSION,
 			reportId: crypto.randomUUID(),
 			timestamp: new Date().toISOString(),
@@ -233,7 +228,7 @@ export default class GenerateCtrfReport extends WDIOReporter {
 	onRunnerStart(runner: RunnerStats): void {
 		this.ctrfReport.reportId = crypto.randomUUID();
 		this.ctrfReport.timestamp = new Date().toISOString();
-		this.ctrfReport.runId = runIdentity(this.reporterConfigOptions.runId);
+		this.ctrfReport.runId = this.reporterConfigOptions.runId || undefined;
 		this.ctrfReport.results.tests = [];
 		this.ctrfReport.results.summary = {
 			tests: 0,
@@ -288,6 +283,7 @@ export default class GenerateCtrfReport extends WDIOReporter {
 					fs.readFileSync(oldCtfFilePath, "utf8"),
 				) as CTRFReport;
 				if (
+					this.ctrfReport.runId !== undefined &&
 					previousReport.runId === this.ctrfReport.runId &&
 					(runner.retry ?? runner.retries ?? 0) > 0
 				)
