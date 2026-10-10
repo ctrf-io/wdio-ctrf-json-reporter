@@ -1,3 +1,4 @@
+import { identityValue, testIdentity, type IdentityOptions } from "./identity";
 import type WDIOReporterType from "@wdio/reporter";
 import type { SuiteStats, RunnerStats, TestStats } from "@wdio/reporter";
 import { type Reporters } from "@wdio/types";
@@ -45,7 +46,9 @@ interface TestMetadata {
 	extra: Record<string, unknown>;
 }
 
-export interface CtrfReporterConfigOptions extends Partial<Reporters.Options> {
+export interface CtrfReporterConfigOptions
+	extends Partial<Reporters.Options>,
+		IdentityOptions {
 	minimal?: boolean;
 	testType?: string;
 	appName?: string;
@@ -86,6 +89,7 @@ export default class GenerateCtrfReport extends WDIOReporter {
 		this.reporterConfigOptions = options;
 		this.ctrfReport = {
 			reportFormat: "CTRF",
+			runId: options.runId || undefined,
 			specVersion: CURRENT_SPEC_VERSION,
 			reportId: crypto.randomUUID(),
 			timestamp: new Date().toISOString(),
@@ -201,6 +205,20 @@ export default class GenerateCtrfReport extends WDIOReporter {
 	}
 
 	private previousReport?: CTRFReport;
+	private shardLabel?: string;
+	private testVariant = "";
+	private identity(test: TestStats): string {
+		return testIdentity(
+			"wdio",
+			{
+				name: test.title,
+				suite: [this.currentSuite],
+				filePath: this.currentSpecFile,
+				variant: this.testVariant,
+			},
+			this.reporterConfigOptions,
+		);
+	}
 
 	onSuiteStart(suite: SuiteStats): void {
 		this.currentSuite = suite.fullTitle;
@@ -208,8 +226,34 @@ export default class GenerateCtrfReport extends WDIOReporter {
 	}
 
 	onRunnerStart(runner: RunnerStats): void {
+		this.ctrfReport.reportId = crypto.randomUUID();
+		this.ctrfReport.timestamp = new Date().toISOString();
+		this.ctrfReport.runId = this.reporterConfigOptions.runId || undefined;
+		this.ctrfReport.results.tests = [];
+		this.ctrfReport.results.summary = {
+			tests: 0,
+			passed: 0,
+			failed: 0,
+			skipped: 0,
+			pending: 0,
+			other: 0,
+			start: 0,
+			stop: 0,
+		};
+		this.testMetadata.clear();
+		this.currentTestTitle = undefined;
+		this.registerRuntimeHandler();
+
 		this.ctrfReport.results.summary.start = Date.now();
+		this.previousReport = undefined;
+		this.shardLabel =
+			identityValue(this.reporterConfigOptions.shardId, "shardId") ??
+			runner.cid;
 		const caps: WebdriverIO.Capabilities = runner.capabilities as any;
+		this.testVariant = JSON.stringify([
+			caps?.browserName ?? "",
+			(caps as Record<string, unknown>)?.platformName ?? "",
+		]);
 		if (caps?.browserName) {
 			this.currentBrowser = caps.browserName;
 		}
@@ -217,6 +261,7 @@ export default class GenerateCtrfReport extends WDIOReporter {
 			this.currentBrowser += ` ${caps.browserVersion}`;
 		}
 		this.ctrfReport.results.environment = {
+			shardId: this.shardLabel || undefined,
 			appName: this.reporterConfigOptions.appName,
 			appVersion: this.reporterConfigOptions.appVersion,
 			osPlatform: this.reporterConfigOptions.osPlatform,
@@ -234,9 +279,15 @@ export default class GenerateCtrfReport extends WDIOReporter {
 		);
 		if (fs.existsSync(oldCtfFilePath)) {
 			try {
-				this.previousReport = JSON.parse(
+				const previousReport = JSON.parse(
 					fs.readFileSync(oldCtfFilePath, "utf8"),
 				) as CTRFReport;
+				if (
+					this.ctrfReport.runId !== undefined &&
+					previousReport.runId === this.ctrfReport.runId &&
+					(runner.retry ?? runner.retries ?? 0) > 0
+				)
+					this.previousReport = previousReport;
 			} catch (e) {
 				console.error(`CTRF: Error reading previous report ${String(e)}`);
 			}
@@ -245,11 +296,11 @@ export default class GenerateCtrfReport extends WDIOReporter {
 
 	onTestStart(test: TestStats): void {
 		// Track current test for runtime metadata collection
-		this.currentTestTitle = test.title;
+		this.currentTestTitle = this.identity(test);
 
 		// Initialize metadata storage for this test
-		if (!this.testMetadata.has(test.title)) {
-			this.testMetadata.set(test.title, { extra: {} });
+		if (!this.testMetadata.has(this.identity(test))) {
+			this.testMetadata.set(this.identity(test), { extra: {} });
 		}
 	}
 
@@ -283,7 +334,7 @@ export default class GenerateCtrfReport extends WDIOReporter {
 			.replace(/[\x00-\x1F]/g, "_")
 			.trim()
 			.replace(/[. ]+$/, "");
-		return `ctrf-${uniqueIdentifier}.json`;
+		return `ctrf-${uniqueIdentifier}${this.shardLabel ? `-${encodeURIComponent(this.shardLabel)}` : ""}.json`;
 	}
 
 	onRunnerEnd(runner: RunnerStats): void {
@@ -321,16 +372,29 @@ export default class GenerateCtrfReport extends WDIOReporter {
 		test: TestStats,
 		status: TestStatus,
 	): void {
+		const logicalId = this.identity(test);
+		const currentIndex = this.ctrfReport.results.tests.findLastIndex(
+			(entry) => entry.testId === logicalId && entry.status === "failed",
+		);
+		const currentPrior =
+			(test.retries ?? 0) > 0 && currentIndex >= 0
+				? this.ctrfReport.results.tests[currentIndex]
+				: undefined;
+		const previousTest =
+			currentPrior ??
+			this.previousReport?.results.tests.find(
+				(entry) => entry.testId === logicalId,
+			);
 		const ctrfTest: CtrfTest = {
+			testId: logicalId,
+			executionId: previousTest?.executionId ?? crypto.randomUUID(),
+			attemptId: crypto.randomUUID(),
 			name: test.title,
 			status,
 			duration: Math.max(0, Math.round(test._duration ?? 0)),
 		};
 
 		if (this.reporterConfigOptions.minimal === false) {
-			const previousTest = this.previousReport?.results.tests.find(
-				(name) => name.name === test.title,
-			);
 			ctrfTest.start = test.start.getTime();
 			if (test.end) {
 				ctrfTest.stop = test.end.getTime();
@@ -346,6 +410,7 @@ export default class GenerateCtrfReport extends WDIOReporter {
 					...(previousTest.retryAttempts ?? []),
 					{
 						attempt: (previousTest.retryAttempts?.length ?? 0) + 1,
+						attemptId: previousTest.attemptId ?? crypto.randomUUID(),
 						status: previousTest.status,
 						duration: previousTest.duration,
 						message: previousTest.message,
@@ -360,7 +425,11 @@ export default class GenerateCtrfReport extends WDIOReporter {
 				if (frameworkRetries > 0) {
 					ctrfTest.retryAttempts = Array.from(
 						{ length: frameworkRetries },
-						(_, index) => ({ attempt: index + 1, status: "failed" }),
+						(_, index) => ({
+							attempt: index + 1,
+							attemptId: crypto.randomUUID(),
+							status: "failed",
+						}),
 					);
 				}
 			}
@@ -380,11 +449,16 @@ export default class GenerateCtrfReport extends WDIOReporter {
 		}
 
 		// Add runtime metadata (extra) if present
-		const metadata = this.testMetadata.get(test.title);
+		const metadata = this.testMetadata.get(this.identity(test));
 		if (metadata && Object.keys(metadata.extra).length > 0) {
 			ctrfTest.extra = metadata.extra as Record<string, any>;
 		}
 
+		if (currentPrior) {
+			this.ctrfReport.results.tests.splice(currentIndex, 1);
+			this.ctrfReport.results.summary.tests--;
+			this.ctrfReport.results.summary[currentPrior.status]--;
+		}
 		this.ctrfReport.results.tests.push(ctrfTest);
 	}
 
