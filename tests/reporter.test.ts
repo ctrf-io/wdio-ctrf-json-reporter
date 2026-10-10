@@ -301,11 +301,17 @@ describe("Reporter output", () => {
 		const test1 = suite.tests[1];
 
 		beforeEach(() => {
-			tmpReporter = new GenerateCtrfReport(mockOptions);
+			tmpReporter = new GenerateCtrfReport({
+				...mockOptions,
+				runId: "spec-retry-run",
+			});
 		});
 
 		test("first run - 1 passed, 1 failure, 0 flaky", () => {
-			tmpReporter.onRunnerStart(getRunnerForSuite(suite));
+			tmpReporter.onRunnerStart({
+				...getRunnerForSuite(suite),
+				retries: 1,
+			} as any);
 			tmpReporter.onSuiteStart(suite as any);
 			tmpReporter.onTestStart(test0 as any);
 			tmpReporter.onTestEnd(test0 as any);
@@ -360,7 +366,10 @@ describe("Reporter output", () => {
 		});
 
 		test("second run - 1 passed, 1 failure, 0 flaky", () => {
-			tmpReporter.onRunnerStart(getRunnerForSuite(suite));
+			tmpReporter.onRunnerStart({
+				...getRunnerForSuite(suite),
+				retries: 1,
+			} as any);
 			tmpReporter.onSuiteStart(suite as any);
 			tmpReporter.onTestStart(test0 as any);
 			tmpReporter.onTestEnd(test0 as any);
@@ -418,7 +427,10 @@ describe("Reporter output", () => {
 			test1fixed.error = undefined;
 			test1fixed.state = "passed";
 
-			tmpReporter.onRunnerStart(getRunnerForSuite(suite));
+			tmpReporter.onRunnerStart({
+				...getRunnerForSuite(suite),
+				retries: 1,
+			} as any);
 			tmpReporter.onSuiteStart(suite as any);
 			tmpReporter.onTestStart(test0 as any);
 			tmpReporter.onTestEnd(test0 as any);
@@ -540,7 +552,7 @@ describe("Reporter params", () => {
 		]);
 	});
 
-	test("strictly validates generated CTRF 0.1.0 output", () => {
+	test("strictly validates generated CTRF 0.2.0 output", () => {
 		const suite = SUITES.suite_2passed;
 		tmpReporter = new GenerateCtrfReport(mockOptions);
 		tmpReporter.onRunnerStart(getRunnerForSuite(suite));
