@@ -56,7 +56,7 @@ import Reporter from "../src/reporter";
 import { validateStrict } from "ctrf";
 
 describe("worker and retry identity", () => {
-	it("joins declared same-run spec retries and isolates unrelated runs and workers", () => {
+	it("joins declared spec retries with optional run identity and isolates unrelated runs and workers", () => {
 		const directory = fs.mkdtempSync(
 			path.join(os.tmpdir(), "ctrf-wdio-identity-"),
 		);
@@ -121,8 +121,14 @@ describe("worker and retry identity", () => {
 			const unknown = make();
 			const unknownFirst = unknown.execute(0, "failed");
 			const unknownRetry = unknown.execute(1, "passed");
-			expect(unknownRetry.executionId).not.toBe(unknownFirst.executionId);
-			expect(unknownRetry.retries).toBe(0);
+			expect(unknownRetry.executionId).toBe(unknownFirst.executionId);
+			expect(unknownRetry.retryAttempts?.[0].attemptId).toBe(
+				unknownFirst.attemptId,
+			);
+			expect(unknownRetry.retries).toBe(1);
+			const fresh = unknown.execute(0, "passed");
+			expect(fresh.executionId).not.toBe(unknownRetry.executionId);
+			expect(fresh.retries).toBe(0);
 			make("coordinated", "0-1").execute(0, "passed");
 			expect(
 				fs.readdirSync(directory).filter((name) => name.endsWith(".json")),

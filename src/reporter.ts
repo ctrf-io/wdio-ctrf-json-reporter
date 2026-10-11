@@ -283,7 +283,6 @@ export default class GenerateCtrfReport extends WDIOReporter {
 					fs.readFileSync(oldCtfFilePath, "utf8"),
 				) as CTRFReport;
 				if (
-					this.ctrfReport.runId !== undefined &&
 					previousReport.runId === this.ctrfReport.runId &&
 					(runner.retry ?? runner.retries ?? 0) > 0
 				)
