@@ -205,7 +205,7 @@ export default class GenerateCtrfReport extends WDIOReporter {
 	}
 
 	private previousReport?: CTRFReport;
-	private shardLabel?: string;
+	private outputShardId?: string;
 	private testVariant = "";
 	private identity(test: TestStats): string {
 		return testIdentity(
@@ -246,9 +246,10 @@ export default class GenerateCtrfReport extends WDIOReporter {
 
 		this.ctrfReport.results.summary.start = Date.now();
 		this.previousReport = undefined;
-		this.shardLabel =
-			identityValue(this.reporterConfigOptions.shardId, "shardId") ??
-			runner.cid;
+		this.outputShardId = identityValue(
+			this.reporterConfigOptions.shardId,
+			"shardId",
+		);
 		const caps: WebdriverIO.Capabilities = runner.capabilities as any;
 		this.testVariant = JSON.stringify([
 			caps?.browserName ?? "",
@@ -261,7 +262,7 @@ export default class GenerateCtrfReport extends WDIOReporter {
 			this.currentBrowser += ` ${caps.browserVersion}`;
 		}
 		this.ctrfReport.results.environment = {
-			shardId: this.shardLabel || undefined,
+			shardId: this.outputShardId ?? (runner.cid || undefined),
 			appName: this.reporterConfigOptions.appName,
 			appVersion: this.reporterConfigOptions.appVersion,
 			osPlatform: this.reporterConfigOptions.osPlatform,
@@ -333,7 +334,7 @@ export default class GenerateCtrfReport extends WDIOReporter {
 			.replace(/[\x00-\x1F]/g, "_")
 			.trim()
 			.replace(/[. ]+$/, "");
-		return `ctrf-${uniqueIdentifier}${this.shardLabel ? `-${encodeURIComponent(this.shardLabel)}` : ""}.json`;
+		return `ctrf-${uniqueIdentifier}${this.outputShardId ? `-${encodeURIComponent(this.outputShardId)}` : ""}.json`;
 	}
 
 	onRunnerEnd(runner: RunnerStats): void {

@@ -56,16 +56,17 @@ import Reporter from "../src/reporter";
 import { validateStrict } from "ctrf";
 
 describe("worker and retry identity", () => {
-	it("joins declared spec retries with optional run identity and isolates unrelated runs and workers", () => {
+	it("joins declared spec retries with optional run identity and preserves default filenames and supports explicit shard partitioning", () => {
 		const directory = fs.mkdtempSync(
 			path.join(os.tmpdir(), "ctrf-wdio-identity-"),
 		);
 		try {
 			const spec = path.join(directory, "case.ts");
-			const make = (runId?: string, cid = "0-0") => {
+			const make = (runId?: string, cid = "0-0", shardId?: string) => {
 				const reporter = new Reporter({
 					outputDir: directory,
 					runId,
+					shardId,
 					stdout: true,
 					writeStream: process.stdout,
 				});
@@ -129,7 +130,26 @@ describe("worker and retry identity", () => {
 			const fresh = unknown.execute(0, "passed");
 			expect(fresh.executionId).not.toBe(unknownRetry.executionId);
 			expect(fresh.retries).toBe(0);
-			make("coordinated", "0-1").execute(0, "passed");
+			const defaultWorker = make("coordinated", "0-1");
+			defaultWorker.execute(0, "passed");
+			expect(
+				defaultWorker.reporter.ctrfReport.results.environment?.shardId,
+			).toBe("0-1");
+			const defaultName = `ctrf-${spec.split(path.sep).join("-").replace(/\.ts$/, "")}.json`;
+			expect(fs.readdirSync(directory)).toEqual([defaultName]);
+			const explicitShard = make("coordinated", "0-1", "shard/one");
+			explicitShard.execute(0, "passed");
+			expect(
+				explicitShard.reporter.ctrfReport.results.environment?.shardId,
+			).toBe("shard/one");
+			expect(
+				fs.existsSync(
+					path.join(
+						directory,
+						defaultName.replace(/\.json$/, "-shard%2Fone.json"),
+					),
+				),
+			).toBe(true);
 			expect(
 				fs.readdirSync(directory).filter((name) => name.endsWith(".json")),
 			).toHaveLength(2);
