@@ -1,6 +1,6 @@
 {
 	"name": "wdio-ctrf-json-reporter",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "A WebriverIO JSON test reporter to create test results reports",
 	"repository": {
 		"type": "git",
@@ -65,15 +65,19 @@
 		"url": "https://github.com/ctrf-io/.github/blob/main/SECURITY.md"
 	},
 	"dependencies": {
-		"@wdio/reporter": "9.32.0",
-		"ctrf": "0.4.0"
+		"@wdio/reporter": "10.0.1",
+		"ctrf": "0.5.0"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.5.15",
-		"@types/node": "26.6.4",
+		"@types/node": "26.6.5",
 		"tsup": "8.5.1",
-		"typescript": "6.0.3",
+		"typescript": "npm:@typescript/typescript6@6.0.2",
 		"vitest": "5.0.3",
-		"vitest-ctrf-json-reporter": "0.0.3"
+		"vitest-ctrf-json-reporter": "0.0.3",
+		"@typescript/native": "npm:typescript@7.0.2"
+	},
+	"overrides": {
+		"esbuild": "0.28.2"
 	}
 }
