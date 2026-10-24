@@ -40,7 +40,12 @@
 		"lint": "biome lint --write . --unsafe",
 		"lint:check": "biome lint .",
 		"all": "npm run build:check && npm run lint:check && npm run format:check && npm run test && npm run build",
-		"check": "biome check ."
+		"check": "biome check .",
+		"test:standard:checker": "node tests/standard/checker/run.mjs",
+		"test:standard:conformance:unit": "npm run build && node tests/standard/conformance/run.mjs unit",
+		"test:standard:conformance:integration": "npm run build && node tests/standard/conformance/run.mjs integration",
+		"test:standard:conformance": "node tests/standard/conformance/run-all.mjs",
+		"test:standard": "node tests/standard/run-all.mjs"
 	},
 	"files": [
 		"dist/",
@@ -65,17 +70,22 @@
 		"url": "https://github.com/ctrf-io/.github/blob/main/SECURITY.md"
 	},
 	"dependencies": {
-		"@wdio/reporter": "10.0.1",
+		"@wdio/reporter": "10.1.0",
 		"ctrf": "0.5.0"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.5.15",
+		"@biomejs/biome": "2.6.2",
 		"@types/node": "26.6.5",
-		"tsup": "8.5.1",
+		"tsup": "9.0.0",
 		"typescript": "npm:@typescript/typescript6@6.0.2",
-		"vitest": "5.0.3",
+		"vitest": "5.0.5",
 		"vitest-ctrf-json-reporter": "0.0.3",
-		"@typescript/native": "npm:typescript@7.0.2"
+		"@typescript/native": "npm:typescript@7.0.2",
+		"ajv": "8.20.0",
+		"ajv-formats": "3.0.1",
+		"@wdio/cli": "10.1.0",
+		"@wdio/local-runner": "10.1.0",
+		"@wdio/mocha-framework": "10.1.0"
 	},
 	"overrides": {
 		"esbuild": "0.28.2"
