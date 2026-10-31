@@ -83,7 +83,12 @@ export function expectedReport(native, options = {}) {
 	const environment = {
 		...Object.fromEntries(
 			Object.keys(configuredOptions)
-				.filter((k) => k !== "runId" && options[k] !== undefined)
+				.filter(
+					(k) =>
+						k !== "runId" &&
+						options[k] !== undefined &&
+						(k !== "buildNumber" || Number.isInteger(options[k])),
+				)
 				.map((k) => [k, options[k]]),
 		),
 		shardId: options.shardId ?? native.runner.cid,

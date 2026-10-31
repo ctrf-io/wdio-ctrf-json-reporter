@@ -269,10 +269,20 @@ export default class GenerateCtrfReport extends WDIOReporter {
 			osRelease: this.reporterConfigOptions.osRelease,
 			osVersion: this.reporterConfigOptions.osVersion,
 			buildName: this.reporterConfigOptions.buildName,
-			buildNumber: this.reporterConfigOptions.buildNumber,
 			buildUrl: this.reporterConfigOptions.buildUrl,
 			extra: caps as Record<string, unknown>,
 		};
+
+		if (this.reporterConfigOptions.buildNumber !== undefined) {
+			if (Number.isInteger(this.reporterConfigOptions.buildNumber)) {
+				this.ctrfReport.results.environment.buildNumber =
+					this.reporterConfigOptions.buildNumber;
+			} else {
+				console.warn(
+					"[CTRF] buildNumber must be a finite integer; omitting invalid value.",
+				);
+			}
+		}
 
 		const oldCtfFilePath = path.join(
 			this.outputDir,

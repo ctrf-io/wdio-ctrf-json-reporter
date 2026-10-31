@@ -1,3 +1,4 @@
+import assert from "node:assert/strict";
 import { validateStrict } from "ctrf";
 import { beforeAll, beforeEach, describe, expect, test } from "vitest";
 import { getRunnerForSuite, SUITES } from "./testdata";
@@ -564,4 +565,46 @@ describe("Reporter params", () => {
 		const serializedReport = JSON.parse(JSON.stringify(tmpReporter.ctrfReport));
 		expect(() => validateStrict(serializedReport)).not.toThrow();
 	});
+});
+
+describe("buildNumber configuration", () => {
+	for (const [buildNumber, expected, warningCount] of [
+		[0, 0, 0],
+		[-1, -1, 0],
+		[100, 100, 0],
+		[Number.MAX_SAFE_INTEGER + 1, Number.MAX_SAFE_INTEGER + 1, 0],
+		[undefined, undefined, 0],
+		[1.5, undefined, 1],
+		[NaN, undefined, 1],
+		[Infinity, undefined, 1],
+		[-Infinity, undefined, 1],
+	] as const) {
+		test(`serializes ${String(buildNumber)} with ${warningCount} warning(s)`, () => {
+			const warn = console.warn;
+			const warnings: unknown[] = [];
+			console.warn = (message) => warnings.push(message);
+			try {
+				const reporter = new GenerateCtrfReport({
+					...mockOptions,
+					buildNumber,
+				});
+				reporter.onRunnerStart(getRunnerForSuite(SUITES.suite_2passed));
+				const report = JSON.parse(JSON.stringify(reporter.ctrfReport));
+				assert.equal(report.results.environment?.buildNumber, expected);
+				assert.equal(
+					Object.hasOwn(report.results.environment ?? {}, "buildNumber"),
+					expected !== undefined,
+				);
+				assert.equal(warnings.length, warningCount);
+				if (warningCount)
+					assert.equal(
+						warnings[0],
+						"[CTRF] buildNumber must be a finite integer; omitting invalid value.",
+					);
+				assert.doesNotThrow(() => validateStrict(report));
+			} finally {
+				console.warn = warn;
+			}
+		});
+	}
 });
