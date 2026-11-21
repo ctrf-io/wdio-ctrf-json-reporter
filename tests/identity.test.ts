@@ -94,7 +94,7 @@ describe("worker and retry identity", () => {
 					reporter.onTestEnd(test as never);
 					reporter.onRunnerEnd(runner as never);
 					expect(() =>
-						validateStrict(reporter.ctrfReport, { specVersion: "0.2.0" }),
+						validateStrict(reporter.ctrfReport, { specVersion: "0.3.0" }),
 					).not.toThrow();
 					return reporter.ctrfReport.results.tests[0];
 				};

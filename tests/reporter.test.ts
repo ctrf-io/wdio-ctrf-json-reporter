@@ -553,7 +553,7 @@ describe("Reporter params", () => {
 		]);
 	});
 
-	test("strictly validates generated CTRF 0.2.0 output", () => {
+	test("strictly validates generated CTRF 0.3.0 output", () => {
 		const suite = SUITES.suite_2passed;
 		tmpReporter = new GenerateCtrfReport(mockOptions);
 		tmpReporter.onRunnerStart(getRunnerForSuite(suite));
